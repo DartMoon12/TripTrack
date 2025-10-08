@@ -61,12 +61,15 @@ button:focus-visible {
 
 /* Hero layout */
 .hero-header {
+  min-height: 100vh;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 6rem 2rem;
-  gap: 3rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
 }
+
 
 .hero-text {
   max-width: 500px;
@@ -74,14 +77,15 @@ button:focus-visible {
 
 .hero-img-wrapper {
   flex: 1;
-  display: flex;
-  justify-content: center;
+  text-align: center;
 }
 
+
 .hero-img {
-  max-width: 420px;
-  width: 100%;
+  max-width: 100%;
+  height: auto;
 }
+
 
 /* Titulek */
 .text-primary-dark {
