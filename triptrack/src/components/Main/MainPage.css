@@ -1,0 +1,121 @@
+/* ================================================= */
+/* BARVY A VŠEOBECNÉ STYLY */
+/* ================================================= */
+
+/* Definice proměnných pro snadnou správu barev */
+:root {
+  --color-primary-dark: #2c3e50;    /* Téměř černá pro text (TripTrack nadpis) */
+  --color-accent: #e77e23;          /* Oranžová/Akcent pro ikony a detaily */
+  --color-accent-light: #fff2e4;    /* Velmi světlá oranžová pro pozadí ikon */
+  --color-background-main: #fcf6f0; /* Světle krémová barva pozadí (z návrhu) */
+  
+  /* Nastaveno na utaženou šířku (dobré pro soustředěný obsah) */
+  --max-content-width: 960px; 
+}
+
+/* Použití proměnných pro Bootstrap třídy */
+.text-primary-dark {
+  color: var(--color-primary-dark) !important;
+}
+
+.text-accent {
+  color: var(--color-accent) !important;
+}
+
+.bg-accent-light {
+  background-color: var(--color-accent-light) !important;
+}
+
+/* Styly pro tmavé tlačítko (btn-dark) */
+.btn-dark {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-dark:hover {
+  background-color: #34495e; /* Mírně tmavší při najetí myší */
+  border-color: #34495e;
+}
+
+
+/* ================================================= */
+/* GLOBAL LAYOUT A OMEZENÍ ŠÍŘKY */
+/* ================================================= =*/
+
+/* Omezení max. šířky pro všechny Bootstrap kontejnery, klíčové pro velké monitory */
+.container {
+  max-width: var(--max-content-width);
+}
+
+@media (min-width: 1400px) {
+    /* Mírné rozšíření pro Extra-Large obrazovky */
+    .container {
+        max-width: 1100px;
+    }
+}
+
+.main-page {
+  /* Nastavení krémového pozadí */
+  background-color: var(--color-background-main);
+  min-height: 100vh;
+  /* Odsazení od navigace, pokud je fixed-top */
+  padding-top: 5rem; 
+}
+
+
+/* ================================================= */
+/* HERO SEKCE */
+/* ================================================= */
+
+.hero-header {
+  /* Pevný padding pro dostatečný prostor nad a pod Hero obsahem */
+  padding-top: 50px; 
+  padding-bottom: 50px; 
+}
+
+.hero-img-wrapper img {
+  /* Zajištění, že SVG/ilustrace je responsivní */
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* ================================================= */
+/* FEATURE CARDS (Mapa, Trasa, Oblíbené) */
+/* ================================================= */
+
+/* Obalující odkaz celé karty */
+.feature-card-link {
+  display: block; /* Umožní odkazu obalit celou kartu */
+  color: var(--color-primary-dark); /* Zajistí tmavý text */
+}
+
+.feature-card {
+  /* Styly pro minimalistickou kartu: bílé pozadí, jemný stín */
+  background-color: white;
+  border: 1px solid #f0f0f0; 
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
+  transition: all 0.3s ease-in-out;
+  text-decoration: none !important; /* Odstraní podtržení u odkazu */
+}
+
+/* Efekt při najetí myši na celou kartu */
+.feature-card:hover {
+  transform: translateY(-5px); /* Mírné nadzvednutí */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Výraznější stín */
+  color: var(--color-primary-dark); /* Udrží barvu textu i při hoveru */
+}
+
+/* Obal ikony (světlý čtvereček z návrhu) */
+.feature-icon-wrapper {
+  display: inline-flex; 
+  justify-content: center;
+  align-items: center;
+  width: 60px; 
+  height: 60px;
+  border-radius: 8px; 
+}

@@ -1,0 +1,49 @@
+/* src/components/Routes/RoutesPage.css */
+
+/* Zajistí zarovnání a odsazení pod fixním navbaru */
+.routes-page {
+    /* Používáme padding-top, aby obsah nespadl pod fixní navbar, 
+       pokud ještě není definován v App.jsx wrapperu */
+    padding-top: 5rem !important; 
+    min-height: 100vh; /* Zajistí, že stránka vyplní celou výšku */
+}
+
+/* Styl pro ikony a detaily trasy */
+.route-card .route-details .text-accent {
+    color: #e77e23; /* Tvá akcentní barva */
+}
+
+/* Styl pro tlačítka - zachovává Bootstrap a tvoje barvy */
+.route-card .btn-outline-dark {
+    border-color: #343a40;
+    color: #343a40;
+}
+.route-card .btn-outline-dark:hover {
+    background-color: #343a40;
+    color: white;
+}
+
+/* src/components/Routes/RoutesPage.css */
+
+/* Zajistí zarovnání a odsazení pod fixním navbaru */
+.routes-page {
+    /* Používáme padding-top, aby obsah nespadl pod fixní navbar, 
+       pokud ještě není definován v App.jsx wrapperu */
+    padding-top: 5rem !important; 
+    min-height: 100vh; /* Zajistí, že stránka vyplní celou výšku */
+}
+
+/* Styl pro ikony a detaily trasy */
+.route-card .route-details .text-accent {
+    color: #e77e23; /* Tvá akcentní barva */
+}
+
+/* Styl pro tlačítka - zachovává Bootstrap a tvoje barvy */
+.route-card .btn-outline-dark {
+    border-color: #343a40;
+    color: #343a40;
+}
+.route-card .btn-outline-dark:hover {
+    background-color: #343a40;
+    color: white;
+}
