@@ -1,0 +1,73 @@
+/* src/components/Footer/Footer.css */
+
+.footer-section {
+    background-color: #111111; /* Ještě tmavší černá pro lepší kontrast */
+    color: #e0e0e0; /* Světle šedá (téměř bílá) pro základní text */
+    padding-top: 60px;
+    padding-bottom: 20px;
+    margin-top: auto;
+}
+
+/* Vynucení bílé barvy pro nadpisy, aby přebily Bootstrap */
+.footer-section h5, 
+.footer-brand span {
+    color: #ffffff !important; 
+}
+
+/* Vynucení světle šedé pro odstavce (přebije text-muted) */
+.footer-section p {
+    color: #b0b0b0 !important;
+}
+
+/* Odkazy v seznamu */
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #b0b0b0 !important; /* Světlá barva odkazů */
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #e77e23 !important; /* Oranžová při najetí */
+    padding-left: 5px;
+}
+
+/* Značka */
+.text-accent {
+    color: #e77e23 !important;
+}
+
+/* Sociální ikony */
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #2a2a2a; /* Světlejší pozadí ikon */
+    color: #fff !important;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 1px solid #333;
+}
+
+.social-link:hover {
+    background-color: #e77e23;
+    color: white !important;
+    transform: translateY(-3px);
+    border-color: #e77e23;
+}
+
+/* Spodní lišta */
+.footer-bottom {
+    border-color: #333 !important; /* Tmavě šedá čára */
+}
+
+.footer-bottom p {
+    color: #888 !important; /* Tmavší šedá pro copyright */
+}

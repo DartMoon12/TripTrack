@@ -2,22 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaTrash, FaMapMarkedAlt, FaClock, FaRulerHorizontal, FaStar } from 'react-icons/fa';
+import { FaTrash, FaClock, FaRulerHorizontal, FaStar } from 'react-icons/fa';
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
 import './RoutesPage.css';
 
 export default function RoutesPage() {
   const {
-      userRoutes, publicRoutes, favoritePublicRouteIds, // 💥 Načteme ID oblíbených veřejných
-      loadingUserRoutes, loadingPublicRoutes, loadingFavorites, // Stavy načítání
+      userRoutes, publicRoutes, favoritePublicRouteIds,
+      loadingUserRoutes, loadingPublicRoutes, loadingFavorites,
       fetchPublicRoutes, deleteRoute, toggleFavorite
   } = useRoutesStorage();
   const [activeTab, setActiveTab] = useState('myRoutes');
 
-  // Efekt pro načtení veřejných tras
   useEffect(() => {
     if (activeTab === 'communityRoutes') {
-        // Načteme jen jednou, pokud nejsou načteny a neprobíhá načítání
         if (publicRoutes.length === 0 && !loadingPublicRoutes) {
              fetchPublicRoutes();
         }
@@ -26,38 +24,49 @@ export default function RoutesPage() {
 
   const handleDelete = (routeId, isPublic = false) => {
     if (window.confirm('Opravdu chcete tuto trasu smazat? Tato akce je nevratná.')) {
-        // 💥 Pozor: mazání veřejných tras by mělo být omezeno jen na autora
-        // Prozatím voláme deleteRoute s příznakem
         deleteRoute(routeId, isPublic);
     }
   };
 
-  // Helper funkce pro vykreslení karty trasy
   const renderRouteCard = (route, isMyRoute = true) => {
-    // 💥 Zjistíme, zda je VEŘEJNÁ trasa oblíbená
     const isPublicFavorite = !isMyRoute && favoritePublicRouteIds.has(route.id);
 
     return (
       <div className="col-12 col-md-6 col-lg-4" key={route.id}>
-        <div className="route-card card h-100 shadow-sm border-0">
+        <div className="route-card card h-100 shadow-sm border-0 overflow-hidden">
+          
+          {/* 💥 ZOBRAZENÍ OBRÁZKU */}
+          <div className="card-img-top-wrapper" style={{ height: '200px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {route.image ? (
+                <img 
+                    src={route.image} 
+                    alt={route.name} 
+                    className="w-100 h-100" 
+                    style={{ objectFit: 'cover' }} 
+                />
+            ) : (
+                <div className="text-muted text-center p-3">
+                    <span style={{ fontSize: '3rem', display: 'block' }}>🗺️</span>
+                    <small>Bez obrázku</small>
+                </div>
+            )}
+          </div>
+
           <div className="card-body p-4 d-flex flex-column">
             <div className="d-flex justify-content-between align-items-start mb-3">
               <h5 className="card-title fw-bold text-dark mb-0">{route.name}</h5>
-              {/* Tlačítko Oblíbené */}
               <button
-                className="btn btn-link p-0 text-decoration-none favorite-button" // Přidána třída pro případné stylování
-                // 💥 Voláme toggleFavorite s příznakem, zda jde o veřejnou trasu
+                className="btn btn-link p-0 text-decoration-none favorite-button"
                 onClick={() => toggleFavorite(route.id, !isMyRoute)}
                 title={ (isMyRoute ? route.isFavorite : isPublicFavorite) ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
               >
                 <FaStar
-                  // 💥 Barva hvězdičky závisí na typu trasy
                   className={ (isMyRoute ? route.isFavorite : isPublicFavorite) ? 'text-warning' : 'text-secondary opacity-50'}
                   size={22}
                 />
               </button>
             </div>
-            {/* Detaily trasy */}
+            
             <div className="route-details mb-3">
               <div className="d-flex align-items-center text-muted small mb-1">
                 <FaRulerHorizontal className="me-2 text-accent" />
@@ -72,10 +81,9 @@ export default function RoutesPage() {
                   {route.description}
                 </p>
               )}
-              {/* Můžeme zobrazit autora u veřejných tras */}
               {!isMyRoute && route.userId && <p className="text-muted small mt-1 mb-0">Autor: ID {route.userId.substring(0, 6)}...</p>}
             </div>
-            {/* Patička karty */}
+
             <div className="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span className="text-secondary small">
                 Uloženo: {route.savedDate || 'N/A'}
@@ -84,7 +92,6 @@ export default function RoutesPage() {
                 <Link to={`/mapa?routeId=${route.id}`} className="btn btn-sm btn-outline-dark">
                     Zobrazit
                 </Link>
-                {/* Mazání povolíme jen u vlastních tras (nebo pokud je uživatel autor veřejné - TODO) */}
                 {isMyRoute && (
                   <button
                     onClick={() => handleDelete(route.id, false)}
@@ -99,75 +106,40 @@ export default function RoutesPage() {
         </div>
       </div>
     );
-  }; // Konec renderRouteCard
+  };
 
   return (
     <div className="routes-page-wrapper">
       <div className="container py-5">
         <h1 className="text-primary-dark fw-bold mb-4">Prohlížeč tras</h1>
-        <p className="lead text-muted mb-4">
-          Spravujte své uložené trasy nebo objevujte nové od ostatních cestovatelů.
-        </p>
-
-        {/* Navigace pro záložky */}
+        <p className="lead text-muted mb-4">Spravujte své uložené trasy nebo objevujte nové od ostatních cestovatelů.</p>
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'myRoutes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('myRoutes')}
-            >
-              Moje trasy
-            </button>
+            <button className={`nav-link ${activeTab === 'myRoutes' ? 'active' : ''}`} onClick={() => setActiveTab('myRoutes')}>Moje trasy</button>
           </li>
           <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'communityRoutes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('communityRoutes')}
-            >
-              Trasy ostatních
-            </button>
+            <button className={`nav-link ${activeTab === 'communityRoutes' ? 'active' : ''}`} onClick={() => setActiveTab('communityRoutes')}>Trasy ostatních</button>
           </li>
         </ul>
-
-        {/* Obsah záložek */}
         <div className="tab-content">
-
-          {/* Panel 1: Moje trasy */}
           <div className={`tab-pane fade ${activeTab === 'myRoutes' ? 'show active' : ''}`} id="myRoutes">
-            {loadingUserRoutes || loadingFavorites ? ( // Čekáme i na načtení oblíbených
-              <div className="text-center p-5">
-                <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Načítám...</span></div>
-                <p className="mt-2 text-muted">Načítám vaše trasy...</p>
-              </div>
+            {loadingUserRoutes || loadingFavorites ? (
+              <div className="text-center p-5"><div className="spinner-border text-primary" role="status"><span className="visually-hidden">Načítám...</span></div></div>
             ) : userRoutes.length === 0 ? (
-              <div className="alert alert-info">
-                  Zatím nemáte žádné uložené trasy...
-              </div>
+              <div className="alert alert-info">Zatím nemáte žádné uložené trasy...</div>
             ) : (
-              <div className="row g-4">
-                {userRoutes.map((route) => renderRouteCard(route, true))}
-              </div>
+              <div className="row g-4">{userRoutes.map((route) => renderRouteCard(route, true))}</div>
             )}
           </div>
-
-          {/* Panel 2: Trasy ostatních */}
           <div className={`tab-pane fade ${activeTab === 'communityRoutes' ? 'show active' : ''}`} id="communityRoutes">
-            {loadingPublicRoutes || loadingFavorites ? ( // Čekáme i na načtení oblíbených
-                <div className="text-center p-5">
-                  <div className="spinner-border text-secondary" role="status"><span className="visually-hidden">Načítám...</span></div>
-                  <p className="mt-2 text-muted">Načítám veřejné trasy...</p>
-                </div>
+            {loadingPublicRoutes || loadingFavorites ? (
+                <div className="text-center p-5"><div className="spinner-border text-secondary" role="status"><span className="visually-hidden">Načítám...</span></div></div>
             ) : publicRoutes.length === 0 ? (
-              <div className="alert alert-secondary">
-                  Zatím nejsou k dispozici žádné veřejné trasy.
-              </div>
+              <div className="alert alert-secondary">Zatím nejsou k dispozici žádné veřejné trasy.</div>
             ) : (
-              <div className="row g-4">
-                {publicRoutes.map((route) => renderRouteCard(route, false))}
-              </div>
+              <div className="row g-4">{publicRoutes.map((route) => renderRouteCard(route, false))}</div>
             )}
           </div>
-
         </div>
       </div>
     </div>

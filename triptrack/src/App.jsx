@@ -14,38 +14,47 @@ import TripMap from './components/Map/TripMap'
 import RoutesPage from './components/RoutesPage/RoutesPage'
 import { RouteStorageProvider } from './Hooks/RouteStorageContext';
 import { Toaster } from 'react-hot-toast';
+import Favorite from './components/Favorite/Favorite';
 
-// 💥 OPRAVA IMPORTU: Použij název 'Favorite' (nebo jak se jmenuje tvůj export)
-// a správnou cestu k souboru Favorite.jsx
-import Favorite from './components/Favorite/Favorite'; // Zkontroluj cestu!
+// 💥 1. Import Footeru
+import Footer from './components/Footer/Footer';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="app-root">
+    // 💥 2. Změna hlavního divu: Přidány třídy pro Flexbox layout na celou výšku
+    <div className="app-root d-flex flex-column min-vh-100">
       <RouteStorageProvider>
         <Toaster position="top-center" reverseOrder={false} />
+        
         <Navbar />
-        <Routes>
 
-          {/* VEŘEJNÉ ROUTY */}
-          <Route path="/" element={<Main />} />
-          <Route path="/home" element={<Main />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        {/* 💥 3. Wrapper obsahu: 'flex-grow-1' zajistí, že tento div zabere veškeré volné místo */}
+        {/* Tím se Footer automaticky posune až na úplný spodek stránky */}
+        <div className="flex-grow-1">
+          <Routes>
 
-          {/* CHRÁNĚNÉ ROUTY */}
-          <Route element={<PrivateRoute />}>
-            <Route path="/mapa" element={<TripMap />} />
-            <Route path="/trasa" element={<RoutesPage />} />
+            {/* VEŘEJNÉ ROUTY */}
+            <Route path="/" element={<Main />} />
+            <Route path="/home" element={<Main />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-            {/* 💥 OPRAVA ROUTY: Použij správný název komponenty */}
-            <Route path="/oblibene" element={<Favorite />} />
-          </Route>
+            {/* CHRÁNĚNÉ ROUTY */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/mapa" element={<TripMap />} />
+              <Route path="/trasa" element={<RoutesPage />} />
+              <Route path="/oblibene" element={<Favorite />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+
+        {/* 💥 4. Vložení Footeru nakonec */}
+        <Footer />
+
       </RouteStorageProvider>
     </div>
   )
