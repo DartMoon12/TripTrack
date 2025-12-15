@@ -1,0 +1,24 @@
+/* src/components/FavoritesPage/FavoritesPage.css */
+
+.favorites-page-wrapper {
+  /* 💥 Nastavení krémového pozadí, stejně jako na Home */
+  background-color: var(--color-background-main, #fcf6f0);
+  min-height: 100vh;
+  
+  /* 💥 Odsazení pod fixním navbaru (předpokládáme 5rem) */
+  padding-top: 5rem; 
+}
+
+/* Styly pro karty (stejné jako u RoutesPage) */
+.favorites-page-wrapper .route-card .route-details .text-accent {
+    color: var(--color-accent, #e77e23);
+}
+
+.favorites-page-wrapper .route-card .btn-outline-dark {
+    border-color: #343a40;
+    color: #343a40;
+}
+.favorites-page-wrapper .route-card .btn-outline-dark:hover {
+    background-color: #343a40;
+    color: white;
+}

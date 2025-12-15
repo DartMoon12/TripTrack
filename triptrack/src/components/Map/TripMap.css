@@ -58,3 +58,47 @@
   border-color: #e77e23 !important; 
   box-shadow: 0 0 0 0.25rem rgba(231, 126, 35, 0.25);
 }
+
+/* ================================================= */
+/* MODÁL PRO ULOŽENÍ TRASY */
+/* ================================================= */
+
+.save-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Tmavý overlay */
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Musí být nad panelem vyhledávání (který má z-index: 10) */
+}
+
+.save-modal-card {
+  width: 100%;
+  max-width: 500px;
+  border: none;
+  border-radius: 12px;
+  /* Animace pro plynulé zobrazení */
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Zajistíme, že popisek formuláře bude tmavý */
+.save-modal-card .form-label {
+    color: #2c3e50; 
+}
+
+/* Jednoduchá animace */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

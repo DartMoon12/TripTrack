@@ -1,19 +1,20 @@
 /* src/components/Routes/RoutesPage.css */
 
-/* Zajistí zarovnání a odsazení pod fixním navbaru */
-.routes-page {
-    /* Používáme padding-top, aby obsah nespadl pod fixní navbar, 
-       pokud ještě není definován v App.jsx wrapperu */
-    padding-top: 5rem !important; 
-    min-height: 100vh; /* Zajistí, že stránka vyplní celou výšku */
+.routes-page-wrapper {
+  /* 💥 Nastavení krémového pozadí, stejně jako na Home */
+  background-color: var(--color-background-main, #fcf6f0);
+  min-height: 100vh;
+  
+  /* 💥 Odsazení pod fixním navbaru (předpokládáme 5rem) */
+  padding-top: 5rem; 
 }
 
-/* Styl pro ikony a detaily trasy */
+/* Styly pro karty (zůstávají stejné) 
+*/
 .route-card .route-details .text-accent {
-    color: #e77e23; /* Tvá akcentní barva */
+    color: var(--color-accent, #e77e23); /* Použití tvé akcentní barvy */
 }
 
-/* Styl pro tlačítka - zachovává Bootstrap a tvoje barvy */
 .route-card .btn-outline-dark {
     border-color: #343a40;
     color: #343a40;
@@ -23,27 +24,42 @@
     color: white;
 }
 
-/* src/components/Routes/RoutesPage.css */
-
-/* Zajistí zarovnání a odsazení pod fixním navbaru */
-.routes-page {
-    /* Používáme padding-top, aby obsah nespadl pod fixní navbar, 
-       pokud ještě není definován v App.jsx wrapperu */
-    padding-top: 5rem !important; 
-    min-height: 100vh; /* Zajistí, že stránka vyplní celou výšku */
+/* 💥 NOVÉ STYLY: Úprava vzhledu záložek (Tabs)
+*/
+.routes-page-wrapper .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
 }
 
-/* Styl pro ikony a detaily trasy */
-.route-card .route-details .text-accent {
-    color: #e77e23; /* Tvá akcentní barva */
+.routes-page-wrapper .nav-tabs .nav-link {
+  /* Odkazy v záložkách */
+  color: var(--color-primary-dark, #2c3e50);
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding-left: 0;
+  padding-right: 0;
+  margin-right: 1.5rem;
+  font-size: 1.1rem;
 }
 
-/* Styl pro tlačítka - zachovává Bootstrap a tvoje barvy */
-.route-card .btn-outline-dark {
-    border-color: #343a40;
-    color: #343a40;
+.routes-page-wrapper .nav-tabs .nav-link:hover {
+  border-bottom: 3px solid #dee2e6;
 }
-.route-card .btn-outline-dark:hover {
-    background-color: #343a40;
-    color: white;
+
+.routes-page-wrapper .nav-tabs .nav-link.active {
+  /* Aktivní odkaz v záložce */
+  border-bottom: 3px solid var(--color-accent, #e77e23); /* Akcentní barva */
+  font-weight: bold;
+  background-color: transparent;
+  color: var(--color-primary-dark, #2c3e50);
+}
+
+
+.route-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Počet řádků (pro Webkit/Blink) */
+  line-clamp: 2;         /* 💥 Přidáno: Standardní vlastnost */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
 }
