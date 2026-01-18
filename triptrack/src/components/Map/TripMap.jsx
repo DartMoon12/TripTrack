@@ -14,7 +14,7 @@ import {
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
 import "./TripMap.css";
 import toast from 'react-hot-toast';
-import { FaCamera } from 'react-icons/fa'; // 💥 Import ikonky pro obrázek
+import { FaCamera, FaTags } from 'react-icons/fa'; // Přidána ikonka štítků
 
 const mapKey = import.meta.env.VITE_MAP_KEY;
 const libraries = ["places"];
@@ -28,8 +28,10 @@ const TRAVEL_MODES = {
   TRANSIT: '🚌 MHD',
 };
 
+// 💥 DEFINICE DOSTUPNÝCH ŠTÍTKŮ
+const AVAILABLE_TAGS = ["Příroda", "Město", "Pro rodiny", "Náročná", "Vyhlídka", "Asfalt", "Dobrodružství", "Pro kočárek", "Kolo", "Běh", "Pro Vozíčkáře"];
+
 export default function TripMap() {
-  // ... (stavy path, searchValue, marker, directions, routeInfo, travelMode, isCalculated zůstávají)
   const [path, setPath] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [marker, setMarker] = useState(null);
@@ -38,14 +40,14 @@ export default function TripMap() {
   const [travelMode, setTravelMode] = useState('DRIVING');
   const [isCalculated, setIsCalculated] = useState(false);
 
-  // Stavy pro modál
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [routeName, setRouteName] = useState("");
   const [routeDescription, setRouteDescription] = useState("");
   const [makePublic, setMakePublic] = useState(false);
-  
-  // 💥 NOVÝ STAV: Pro obrázek
   const [selectedImage, setSelectedImage] = useState(null);
+
+  // 💥 NOVÝ STAV: Pro vybrané štítky
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const mapRef = useRef(null);
   const autocompleteRef = useRef(null);
@@ -61,10 +63,6 @@ export default function TripMap() {
 
   const hasStartAndEnd = path.length >= 2;
 
-  // ... (useEffect a handlery handleClick, handlePlaceChanged, directionsCallback, calculateRoute, clearMap zůstávají stejné)
-  
-  // Zkráceno pro přehlednost - sem vlož všechny funkce z minula (useEffect, handleClick, atd...)
-  // Použij kód z předchozí odpovědi pro tyto funkce
   useEffect(() => {
     if (isLoaded) {
       const routeId = searchParams.get('routeId');
@@ -75,7 +73,6 @@ export default function TripMap() {
           setTravelMode(routeToLoad.mode || 'DRIVING');
           setRouteInfo({ distance: routeToLoad.distance, duration: routeToLoad.duration, mode: routeToLoad.mode });
           setIsCalculated(false);
-          // Pokud bys chtěl načítat i obrázek pro editaci, musel bys ho tu nastavit
         } else { toast.error("Požadovaná trasa nebyla nalezena."); }
       }
     }
@@ -87,7 +84,7 @@ export default function TripMap() {
     setDirections(null); setRouteInfo(null); setIsCalculated(false);
   };
   
-  const handlePlaceChanged = () => { /* ... kód z minula ... */ 
+  const handlePlaceChanged = () => {
     const autocomplete = autocompleteRef.current;
     if (!autocomplete) return;
     const place = autocomplete.getPlace?.();
@@ -98,7 +95,7 @@ export default function TripMap() {
     if (mapRef.current) { mapRef.current.panTo(newCenter); mapRef.current.setZoom(14); }
   };
 
-  const directionsCallback = useCallback((result, status) => { /* ... kód z minula ... */ 
+  const directionsCallback = useCallback((result, status) => {
     setIsCalculated(true);
     if (status === 'OK' && result) {
       setDirections(result);
@@ -109,32 +106,35 @@ export default function TripMap() {
     } else { setRouteInfo({ distance: 'Chyba API', duration: 'N/A', mode: travelMode }); setDirections(null); }
   }, [travelMode]);
 
-  const calculateRoute = () => { /* ... */ 
+  const calculateRoute = () => {
     if (path.length < 2) { toast.error("Pro výpočet trasy potřebuješ alespoň 2 body."); return; }
     setDirections(null); setRouteInfo(null); setIsCalculated(false); setMarker(null);
+  };
+
+  // 💥 FUNKCE PRO PŘEPÍNÁNÍ ŠTÍTKŮ
+  const toggleTag = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
   };
 
   const clearMap = () => {
     setPath([]); setMarker(null); setSearchValue(""); setDirections(null); setRouteInfo(null);
     setTravelMode('DRIVING'); setIsCalculated(false); setShowSaveModal(false);
-    setSelectedImage(null); // Vyčistit obrázek
+    setSelectedImage(null);
+    setSelectedTags([]); // Vyčistit štítky
     navigate('/mapa', { replace: true });
   };
 
-  // 💥 NOVÁ FUNKCE: Zpracování nahrání obrázku
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-        // Kontrola velikosti (např. max 800KB)
         if (file.size > 800 * 1024) {
             toast.error("Obrázek je příliš velký! Maximální velikost je cca 800KB.");
             return;
         }
-
         const reader = new FileReader();
-        reader.onloadend = () => {
-            setSelectedImage(reader.result); // Uložíme Base64 string
-        };
+        reader.onloadend = () => { setSelectedImage(reader.result); };
         reader.readAsDataURL(file);
     }
   };
@@ -147,7 +147,8 @@ export default function TripMap() {
     setRouteName(`${TRAVEL_MODES[travelMode]} trasa`);
     setRouteDescription("");
     setMakePublic(false);
-    setSelectedImage(null); // Reset obrázku při otevření
+    setSelectedImage(null);
+    setSelectedTags([]); // Reset štítků při otevření
     setShowSaveModal(true);
   };
 
@@ -162,8 +163,9 @@ export default function TripMap() {
         distance: routeInfo.distance,
         duration: routeInfo.duration,
         mode: routeInfo.mode,
-        // 💥 Přidáme obrázek do dat
-        image: selectedImage 
+        image: selectedImage,
+        // 💥 PŘIDÁNÍ ŠTÍTKŮ DO DAT
+        tags: selectedTags 
     };
     
     saveRoute(newRouteData, makePublic);
@@ -179,7 +181,6 @@ export default function TripMap() {
 
   return (
     <div className="map-wrapper">
-      {/* ... (Search bar a Mapa zůstávají stejné) ... */}
       <div className="map-search-panel shadow-lg d-flex align-items-center gap-3">
         <div style={{ flex: '2' }}>
             <Autocomplete onLoad={(ac) => (autocompleteRef.current = ac)} onPlaceChanged={handlePlaceChanged}>
@@ -207,7 +208,6 @@ export default function TripMap() {
          {!directions && hasStartAndEnd && <Polyline path={path} options={{ strokeColor: "#e77e23", strokeWeight: 2, strokeOpacity: 0.5 }} />}
       </GoogleMap>
 
-      {/* --- MODÁL PRO ULOŽENÍ --- */}
       {showSaveModal && (
         <div className="save-modal-overlay">
           <div className="save-modal-card card shadow-lg">
@@ -223,18 +223,32 @@ export default function TripMap() {
                   <textarea className="form-control" rows="2" value={routeDescription} onChange={(e) => setRouteDescription(e.target.value)}></textarea>
                 </div>
 
-                {/* 💥 VÝBĚR OBRÁZKU */}
+                {/* 💥 VÝBĚR ŠTÍTKŮ */}
                 <div className="mb-3">
-                    <label className="form-label">Přidat fotku (volitelné)</label>
-                    <input 
-                        type="file" 
-                        className="form-control" 
-                        accept="image/*" 
-                        onChange={handleImageChange} 
-                    />
+                  <label className="form-label d-flex align-items-center gap-2">
+                    <FaTags className="text-warning" /> Štítky
+                  </label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {AVAILABLE_TAGS.map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className={`btn btn-sm ${selectedTags.includes(tag) ? 'btn-warning text-white' : 'btn-outline-secondary'}`}
+                        onClick={() => toggleTag(tag)}
+                        style={{ borderRadius: '20px', fontSize: '0.8rem' }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label"><FaCamera className="me-1" /> Přidat fotku</label>
+                    <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
                     {selectedImage && (
-                        <div className="mt-2 text-center">
-                            <img src={selectedImage} alt="Náhled" style={{ maxHeight: '100px', borderRadius: '8px' }} />
+                        <div className="mt-2 text-center border p-1 rounded">
+                            <img src={selectedImage} alt="Náhled" style={{ maxHeight: '80px', borderRadius: '4px' }} />
                         </div>
                     )}
                 </div>
