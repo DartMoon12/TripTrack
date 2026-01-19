@@ -2,120 +2,142 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaTrash, FaMapMarkedAlt, FaClock, FaRulerHorizontal, FaStar } from 'react-icons/fa';
+import { FaTrash, FaClock, FaRulerHorizontal, FaStar, FaMapMarkerAlt, FaUserCircle } from 'react-icons/fa';
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
-import './Favorite.css'; // Ujisti se, že cesta a název jsou správné
+import './Favorite.css';
 
-export default function Favorite() { // Přejmenoval jsem komponentu na Favorite
+export default function Favorite() {
   const {
-      userRoutes, publicRoutes, favoritePublicRouteIds, // Načteme všechna data
-      loadingUserRoutes, loadingPublicRoutes, loadingFavorites, // Stavy načítání
+      userRoutes, publicRoutes, favoritePublicRouteIds,
+      loadingUserRoutes, loadingPublicRoutes, loadingFavorites,
       deleteRoute, toggleFavorite
   } = useRoutesStorage();
 
-  // 1. Získáme oblíbené SOUKROMÉ trasy
   const favoriteUserRoutes = (userRoutes || []).filter(route => route.isFavorite);
-
-  // 2. Získáme oblíbené VEŘEJNÉ trasy
-  const favoritePublicRoutesData = (publicRoutes || [])
-        .filter(route => favoritePublicRouteIds.has(route.id));
-
-  // 3. Spojíme obě pole pro zobrazení
+  const favoritePublicRoutesData = (publicRoutes || []).filter(route => favoritePublicRouteIds.has(route.id));
   const allFavoriteRoutes = [...favoriteUserRoutes, ...favoritePublicRoutesData];
 
   const handleDelete = (routeId, isPublic = false) => {
-    // Rozhodnutí, zda mazat jen z oblíbených (veřejná) nebo úplně (soukromá)
     if (isPublic) {
-        // Pokud je veřejná, chceme ji jen odebrat z oblíbených
         if (window.confirm('Opravdu chcete odebrat tuto veřejnou trasu z oblíbených?')) {
-            toggleFavorite(routeId, true); // Voláme toggle s příznakem isPublic
+            toggleFavorite(routeId, true);
         }
     } else {
-        // Pokud je soukromá, ptáme se na smazání
         if (window.confirm('Opravdu chcete tuto vaši trasu smazat? (Tím ji smažete úplně)')) {
             deleteRoute(routeId, false);
         }
     }
   };
 
-  // Helper pro vykreslení karty (podobný jako v RoutesPage)
   const renderFavoriteCard = (route) => {
-    const isMyRoute = userRoutes.some(r => r.id === route.id); // Zjistíme, zda je to moje trasa
+    const isMyRoute = userRoutes.some(r => r.id === route.id);
+    
     return (
-      <div className="col-12 col-md-6 col-lg-4" key={route.id}>
-        <div className="route-card card h-100 shadow-sm border-0">
-          <div className="card-body p-4 d-flex flex-column">
-            <div className="d-flex justify-content-between align-items-start mb-3">
-              <h5 className="card-title fw-bold text-dark mb-0">{route.name}</h5>
-              {/* Vždy žlutá hvězdička, kliknutím se odebere */}
-              <button
-                className="btn btn-link p-0 text-decoration-none"
-                onClick={() => toggleFavorite(route.id, !isMyRoute)} // Správně předáme příznak
+      <div className="col-12 col-md-6 col-lg-4 d-flex align-items-stretch" key={route.id}>
+        <div className="route-card-modern w-100">
+          
+          {/* --- Obrázek a odznaky --- */}
+          <div className="card-img-wrapper">
+            {route.image ? (
+              <img src={route.image} className="w-100 h-100 object-fit-cover" alt={route.name} />
+            ) : (
+              <div className="h-100 d-flex flex-column align-items-center justify-content-center text-muted bg-light">
+                 <FaMapMarkerAlt size={40} className="mb-2 opacity-25" />
+                 <span className="small opacity-50">Bez náhledu</span>
+              </div>
+            )}
+            
+            {/* Hodnocení (pokud existuje a není to moje privátní bez hodnocení) */}
+            {route.avgRating > 0 && (
+              <div className="rating-badge position-absolute top-0 start-0 m-3">
+                <FaStar className="me-1 mb-1" /> 
+                {Number(route.avgRating).toFixed(1)} 
+                <span className="opacity-50 ms-1 fw-normal">({route.reviewCount || 0})</span>
+              </div>
+            )}
+
+            {/* Tlačítko Oblíbené (Vždy žluté, protože jsme v oblíbených) */}
+            <button 
+                className="btn position-absolute top-0 end-0 m-3 p-2 rounded-circle bg-white shadow-sm border-0 d-flex align-items-center justify-content-center"
+                style={{ width: '38px', height: '38px' }}
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(route.id, !isMyRoute); }}
                 title="Odebrat z oblíbených"
-              >
-                <FaStar className="text-warning" size={22} />
-              </button>
-            </div>
-            <div className="route-details mb-3">
-              <div className="d-flex align-items-center text-muted small mb-1">
-                <FaRulerHorizontal className="me-2 text-accent" />
-                <span>Vzdálenost: <strong>{route.distance}</strong></span>
-              </div>
-              <div className="d-flex align-items-center text-muted small mb-2">
-                <FaClock className="me-2 text-accent" />
-                <span>Čas: <strong>{route.duration}</strong></span>
-              </div>
-              {route.description && (
-                <p className="card-text text-muted small mt-2 mb-0 route-description">
-                  {route.description}
-                </p>
-              )}
-               {!isMyRoute && route.userId && <p className="text-muted small mt-1 mb-0">Autor: ID {route.userId.substring(0, 6)}...</p>}
-            </div>
-            <div className="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-              <span className="text-secondary small">
-                Uloženo: {route.savedDate || 'N/A'}
-              </span>
-              <div className="d-flex gap-2">
-                <Link to={`/mapa?routeId=${route.id}`} className="btn btn-sm btn-outline-dark">
-                    Zobrazit
-                </Link>
-                {/* Tlačítko Smazat je zde jen pro vlastní trasy */}
-                {isMyRoute && (
-                  <button
-                    onClick={() => handleDelete(route.id, false)}
-                    className="btn btn-sm btn-outline-danger"
-                  >
-                    <FaTrash />
-                  </button>
+            >
+                <FaStar size={18} className="text-warning" />
+            </button>
+          </div>
+
+          {/* --- Tělo karty --- */}
+          <div className="card-body p-4 d-flex flex-column">
+            
+            {/* Název */}
+            <h5 className="fw-bold text-dark mb-2 text-truncate">{route.name}</h5>
+            
+            {/* Tagy */}
+            <div className="d-flex flex-wrap gap-2 mb-3">
+                {route.tags && route.tags.length > 0 ? (
+                    route.tags.map(t => (
+                        <span key={t} className="tag-pill">
+                            {t}
+                        </span>
+                    ))
+                ) : (
+                    <span className="small text-muted opacity-50 fst-italic">Bez štítků</span>
                 )}
-              </div>
+            </div>
+
+            {/* Info */}
+            <div className="d-flex gap-4 text-muted small mb-4">
+              <span className="d-flex align-items-center"><FaRulerHorizontal className="text-warning me-2" /> {route.distance}</span>
+              <span className="d-flex align-items-center"><FaClock className="text-warning me-2" /> {route.duration}</span>
+            </div>
+            
+            {/* Autor (pokud je to veřejná trasa) */}
+            {!isMyRoute && route.userName && (
+                <div className="d-flex align-items-center small text-muted mb-3 opacity-75">
+                    <FaUserCircle className="me-2" /> Autor: {route.userName}
+                </div>
+            )}
+
+            {/* Akce */}
+            <div className="mt-auto d-flex gap-2 align-items-center">
+              <Link to={`/mapa?routeId=${route.id}`} className="btn-action-primary flex-grow-1 text-center text-decoration-none">
+                Zobrazit
+              </Link>
+
+              {isMyRoute && (
+                <button onClick={() => handleDelete(route.id, false)} className="btn-delete" title="Smazat trasu">
+                  <FaTrash size={14} />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
     );
-  }; // Konec renderFavoriteCard
+  };
 
   return (
-    <div className="favorites-page-wrapper">
-      <div className="container py-5">
-        <h1 className="text-primary-dark fw-bold mb-4">Oblíbené trasy</h1>
-        <p className="lead text-muted mb-5">
-          Vaše oblíbené trasy na jednom místě.
-        </p>
+    <div className="favorites-page-wrapper pt-5">
+      <div className="container">
+        <div className="row mb-5">
+            <div className="col-12 text-center text-md-start">
+                <h1 className="page-title display-5 mb-3">Oblíbené trasy</h1>
+                <p className="lead text-muted">
+                  Vaše oblíbené trasy na jednom místě.
+                </p>
+            </div>
+        </div>
 
-        {/* Zobrazení během načítání */}
         {loadingUserRoutes || loadingPublicRoutes || loadingFavorites ? (
             <div className="text-center p-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Načítám...</span>
-                </div>
-                <p className="mt-2 text-muted">Načítám vaše oblíbené trasy...</p>
+                <div className="spinner-border text-warning" role="status"></div>
             </div>
         ) : allFavoriteRoutes.length === 0 ? (
-          <div className="alert alert-info">
-              Zatím nemáte žádné oblíbené trasy. Označte nějakou trasu hvězdičkou!
+          <div className="text-center py-5">
+              <div className="display-1 mb-3 opacity-25">⭐</div>
+              <h4 className="text-muted fw-bold">Zatím žádné oblíbené trasy</h4>
+              <p className="text-muted">Označte trasy hvězdičkou a najdete je zde.</p>
           </div>
         ) : (
           <div className="row g-4">

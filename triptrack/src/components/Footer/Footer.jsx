@@ -36,19 +36,6 @@ export default function Footer() {
               <li><Link to="/oblibene">Oblíbené</Link></li>
             </ul>
           </div>
-
-          {/* 3. Sloupec: Kontakt a Sociální sítě */}
-          <div className="col-lg-4 col-md-12">
-            <h5 className="fw-bold mb-3">Sledujte nás</h5>
-            <p className="small">
-              Máte nápad na vylepšení? Napište nám nebo nás sledujte na sociálních sítích.
-            </p>
-            <div className="d-flex gap-3 mt-3 social-icons">
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="social-link"><FaGithub /></a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="social-link"><FaTwitter /></a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="social-link"><FaInstagram /></a>
-            </div>
-          </div>
         </div>
 
         {/* Spodní lišta */}

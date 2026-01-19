@@ -1,65 +1,192 @@
-/* src/components/Routes/RoutesPage.css */
+/* src/components/RoutesPage/RoutesPage.css */
+
+:root {
+  /* 💥 Sjednocené barvy podle tvého zadání */
+  --bg-cream: #fcf6f0;           /* Hlavní pozadí */
+  --primary-dark: #2c3e50;       /* Tmavý text */
+  --accent-orange: #e77e23;      /* Akcentní oranžová */
+  --accent-light: #fff2e4;       /* Světlá oranžová (pro pozadí tagů) */
+  
+  --card-shadow: 0 10px 30px rgba(44, 62, 80, 0.05); /* Jemnější stín laděný do tmavě modré */
+  --card-radius: 24px;
+}
 
 .routes-page-wrapper {
-  /* 💥 Nastavení krémového pozadí, stejně jako na Home */
-  background-color: var(--color-background-main, #fcf6f0);
+  background-color: var(--bg-cream);
   min-height: 100vh;
-  
-  /* 💥 Odsazení pod fixním navbaru (předpokládáme 5rem) */
-  padding-top: 5rem; 
+  padding-bottom: 80px;
+  color: var(--primary-dark);
 }
 
-/* Styly pro karty (zůstávají stejné) 
-*/
-.route-card .route-details .text-accent {
-    color: var(--color-accent, #e77e23); /* Použití tvé akcentní barvy */
+.page-title {
+  color: var(--primary-dark);
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
-.route-card .btn-outline-dark {
-    border-color: #343a40;
-    color: #343a40;
+/* --- Vyhledávání a Filtry --- */
+.search-container {
+  background: white;
+  border-radius: 50px;
+  padding: 5px 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
 }
-.route-card .btn-outline-dark:hover {
-    background-color: #343a40;
+
+.search-container:focus-within {
+  box-shadow: 0 4px 20px rgba(231, 126, 35, 0.15);
+  border-color: var(--accent-orange);
+}
+
+.search-input, .filter-select {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-weight: 500;
+  color: var(--primary-dark);
+}
+
+.search-input::placeholder {
+  color: #aab7c4;
+}
+
+/* --- Tlačítka záložek (Pills) --- */
+.nav-pills-custom {
+  background: white;
+  padding: 5px;
+  border-radius: 50px;
+  display: inline-flex;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.nav-link-custom {
+  border-radius: 40px !important;
+  padding: 10px 25px;
+  font-weight: 600;
+  color: #7f8c8d;
+  border: none;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-link-custom.active {
+  background-color: var(--primary-dark);
+  color: white;
+  box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
+}
+
+/* --- Karty tras --- */
+.route-card-modern {
+  border: none;
+  border-radius: var(--card-radius);
+  background: white;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+}
+
+.route-card-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(44, 62, 80, 0.1);
+}
+
+.card-img-wrapper {
+  height: 180px;
+  position: relative;
+  background-color: #ecf0f1;
+}
+
+.rating-badge {
+  background: rgba(44, 62, 80, 0.9);
+  backdrop-filter: blur(4px);
+  color: #f1c40f; /* Jasnější žlutá pro hvězdy */
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* --- Tagy (Upraveno pro nový vzhled) --- */
+.tag-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 12px;
+  /* Použijeme tvou světlou barvu pozadí */
+  background-color: var(--accent-light); 
+  color: var(--accent-orange);
+  transition: all 0.2s ease;
+}
+
+.tag-pill:hover {
+    background-color: var(--accent-orange);
     color: white;
 }
 
-/* 💥 NOVÉ STYLY: Úprava vzhledu záložek (Tabs)
-*/
-.routes-page-wrapper .nav-tabs {
-  border-bottom: 1px solid #dee2e6;
-}
-
-.routes-page-wrapper .nav-tabs .nav-link {
-  /* Odkazy v záložkách */
-  color: var(--color-primary-dark, #2c3e50);
+/* --- Tlačítka na kartě --- */
+.btn-action-primary {
+  background-color: var(--primary-dark);
+  color: white;
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-weight: 600;
   border: none;
-  border-bottom: 3px solid transparent;
-  padding-left: 0;
-  padding-right: 0;
-  margin-right: 1.5rem;
-  font-size: 1.1rem;
+  transition: all 0.2s;
 }
 
-.routes-page-wrapper .nav-tabs .nav-link:hover {
-  border-bottom: 3px solid #dee2e6;
+.btn-action-primary:hover {
+  background-color: var(--accent-orange);
+  color: white;
+  transform: scale(1.02);
 }
 
-.routes-page-wrapper .nav-tabs .nav-link.active {
-  /* Aktivní odkaz v záložce */
-  border-bottom: 3px solid var(--color-accent, #e77e23); /* Akcentní barva */
-  font-weight: bold;
+.btn-action-outline {
   background-color: transparent;
-  color: var(--color-primary-dark, #2c3e50);
+  color: var(--accent-orange);
+  border: 2px solid var(--accent-orange);
+  border-radius: 50px;
+  padding: 6px 15px;
+  font-weight: 700;
+  transition: all 0.2s;
 }
 
+.btn-action-outline:hover {
+  background-color: var(--accent-orange);
+  color: white;
+}
 
-.route-description {
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Počet řádků (pro Webkit/Blink) */
-  line-clamp: 2;         /* 💥 Přidáno: Standardní vlastnost */
-  -webkit-box-orient: vertical;
+.btn-delete {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fee;
+  background: #fff5f5;
+  color: #e74c3c;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+/* --- Modal --- */
+.custom-modal-content {
+  border-radius: 24px;
+  border: none;
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
+  background-color: white;
+}
+
+/* Spinner barva */
+.text-warning {
+    color: var(--accent-orange) !important;
 }
