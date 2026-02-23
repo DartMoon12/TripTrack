@@ -1,116 +1,128 @@
-/* ================================================= */
-/* BARVY A VŠEOBECNÉ STYLY */
-/* ================================================= */
-
-/* Definice proměnných pro snadnou správu barev */
-:root {
-  --color-primary-dark: #2c3e50;    /* Téměř černá pro text (TripTrack nadpis) */
-  --color-accent: #e77e23;          /* Oranžová/Akcent pro ikony a detaily */
-  --color-accent-light: #fff2e4;    /* Velmi světlá oranžová pro pozadí ikon */
-  --color-background-main: #fcf6f0; /* Světle krémová barva pozadí (z návrhu) */
-  
-  /* Nastaveno na utaženou šířku (dobré pro soustředěný obsah) */
-  --max-content-width: 960px; 
-}
-
-/* Použití proměnných pro Bootstrap třídy */
-.text-primary-dark {
-  color: var(--color-primary-dark) !important;
-}
-
-.text-accent {
-  color: var(--color-accent) !important;
-}
-
-.bg-accent-light {
-  background-color: var(--color-accent-light) !important;
-}
-
-/* Styly pro tmavé tlačítko (btn-dark) */
-.btn-dark {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  color: white;
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-dark:hover {
-  background-color: #34495e; /* Mírně tmavší při najetí myší */
-  border-color: #34495e;
-}
-
+/* src/components/MainPage/MainPage.css */
 
 /* ================================================= */
 /* GLOBAL LAYOUT A OMEZENÍ ŠÍŘKY */
-/* ================================================= =*/
+/* ================================================= */
 
-/* Omezení max. šířky pro všechny Bootstrap kontejnery, klíčové pro velké monitory */
+.main-page {
+  --max-content-width: 960px;
+  background-color: var(--bg-cream);
+  min-height: 100vh;
+  padding-top: 5rem;
+  color: var(--primary-dark);
+}
+
 .container {
-  max-width: var(--max-content-width);
+  max-width: 960px;
+  max-width: var(--max-content-width, 960px);
 }
 
 @media (min-width: 1400px) {
-    /* Mírné rozšíření pro Extra-Large obrazovky */
     .container {
         max-width: 1100px;
     }
 }
 
-.main-page {
-  /* Nastavení krémového pozadí */
-  background-color: var(--color-background-main);
-  min-height: 100vh;
-  /* Odsazení od navigace, pokud je fixed-top */
-  padding-top: 5rem; 
+/* ================================================= */
+/* BARVY A VŠEOBECNÉ STYLY */
+/* ================================================= */
+
+.text-primary-dark {
+  color: var(--primary-dark) !important;
 }
 
+.text-accent {
+  color: var(--accent-orange) !important;
+}
+
+.bg-accent-light {
+  background-color: var(--accent-light) !important;
+}
+
+/* --- TLAČÍTKO "ZAČÍT" --- */
+.btn-dark {
+  background-color: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+  color: var(--bg-cream) !important; 
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-dark:hover {
+  background-color: var(--accent-orange) !important;
+  border-color: var(--accent-orange) !important;
+  color: white !important;
+}
 
 /* ================================================= */
 /* HERO SEKCE */
 /* ================================================= */
 
 .hero-header {
-  /* Pevný padding pro dostatečný prostor nad a pod Hero obsahem */
   padding-top: 50px; 
   padding-bottom: 50px; 
 }
 
 .hero-img-wrapper img {
-  /* Zajištění, že SVG/ilustrace je responsivní */
   display: block;
   max-width: 100%;
   height: auto;
 }
 
+.hero-header h1, .hero-header p {
+    color: var(--primary-dark);
+}
 
 /* ================================================= */
 /* FEATURE CARDS (Mapa, Trasa, Oblíbené) */
 /* ================================================= */
 
-/* Obalující odkaz celé karty */
 .feature-card-link {
-  display: block; /* Umožní odkazu obalit celou kartu */
-  color: var(--color-primary-dark); /* Zajistí tmavý text */
+  display: block; 
+  color: var(--primary-dark); 
+  text-decoration: none;
 }
 
+/* KARTY */
 .feature-card {
-  /* Styly pro minimalistickou kartu: bílé pozadí, jemný stín */
-  background-color: white;
-  border: 1px solid #f0f0f0; 
+  background-color: var(--card-bg) !important;
+  color: var(--primary-dark) !important;
+  border: 1px solid var(--border-color);
+  
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
   transition: all 0.3s ease-in-out;
-  text-decoration: none !important; /* Odstraní podtržení u odkazu */
+  text-decoration: none !important;
 }
 
-/* Efekt při najetí myši na celou kartu */
+/* Texty uvnitř karty */
+.feature-card h1, 
+.feature-card h2, 
+.feature-card h3, 
+.feature-card h4, 
+.feature-card h5, 
+.feature-card h6,
+.feature-card p {
+    color: var(--primary-dark) !important;
+}
+
+/* Hover efekt */
 .feature-card:hover {
-  transform: translateY(-5px); /* Mírné nadzvednutí */
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Výraznější stín */
-  color: var(--color-primary-dark); /* Udrží barvu textu i při hoveru */
+  transform: translateY(-5px); 
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); 
+  border-color: var(--accent-orange);
 }
 
-/* Obal ikony (světlý čtvereček z návrhu) */
+.feature-card:hover h1, 
+.feature-card:hover h2, 
+.feature-card:hover h3, 
+.feature-card:hover h4, 
+.feature-card:hover h5, 
+.feature-card:hover h6,
+.feature-card:hover p {
+    color: var(--accent-orange) !important;
+}
+
+/* Obal ikony */
 .feature-icon-wrapper {
   display: inline-flex; 
   justify-content: center;
@@ -118,4 +130,51 @@
   width: 60px; 
   height: 60px;
   border-radius: 8px; 
+  background-color: var(--accent-light) !important;
+}
+
+/* ================================================= */
+/* 📱 RESPONZIVITA - MOBILNÍ UPRAVY 📱 */
+/* ================================================= */
+
+@media (max-width: 768px) {
+  
+  /* 1. Menší odsazení od horního okraje */
+  .main-page {
+    padding-top: 60px !important; 
+  }
+
+  /* 2. Utažení Hero sekce */
+  .hero-header {
+    padding-top: 10px; /* Ještě menší mezera nahoře */
+    padding-bottom: 30px;
+    text-align: center; 
+  }
+
+  .hero-header h1 {
+    font-size: 2.2rem; /* Trochu menší písmo */
+  }
+
+  /* 3. Kompaktnější karty */
+  .feature-card {
+    padding: 1.5rem !important; 
+    margin-bottom: 10px; 
+  }
+
+  .feature-icon-wrapper {
+    width: 50px; 
+    height: 50px;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  /* 🔥 4. OPRAVA OBRÁZKU - ZMENŠENÍ ŠÍŘKY 🔥 */
+  /* Místo paddingu natvrdo zmenšíme obrázek na 85% šířky obrazovky */
+  .hero-img-wrapper img {
+      width: 85% !important; 
+      max-width: 300px; /* Aby nebyl moc velký */
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+  }
 }

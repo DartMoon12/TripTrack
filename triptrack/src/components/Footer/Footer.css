@@ -1,22 +1,29 @@
 /* src/components/Footer/Footer.css */
 
 .footer-section {
-    background-color: #111111; /* Ještě tmavší černá pro lepší kontrast */
-    color: #e0e0e0; /* Světle šedá (téměř bílá) pro základní text */
+    /* 💥 ZMĚNA: Používáme barvu karet. 
+       V Light mode bude bílá, v Dark mode tmavě šedá. */
+    background-color: var(--card-bg);
+    color: var(--primary-dark);
     padding-top: 60px;
     padding-bottom: 20px;
     margin-top: auto;
+    
+    /* Přidáme horní čáru, aby se footer vizuálně oddělil od zbytku stránky */
+    border-top: 1px solid var(--border-color);
 }
 
-/* Vynucení bílé barvy pro nadpisy, aby přebily Bootstrap */
+/* Nadpisy */
 .footer-section h5, 
 .footer-brand span {
-    color: #ffffff !important; 
+    /* Změna z bílé na hlavní textovou barvu (v Light mode tmavá, v Dark světlá) */
+    color: var(--primary-dark) !important; 
 }
 
-/* Vynucení světle šedé pro odstavce (přebije text-muted) */
+/* Odstavce */
 .footer-section p {
-    color: #b0b0b0 !important;
+    color: var(--primary-dark) !important;
+    opacity: 0.8; /* Místo šedé barvy použijeme průhlednost, vypadá to lépe */
 }
 
 /* Odkazy v seznamu */
@@ -25,19 +32,21 @@
 }
 
 .footer-links a {
-    color: #b0b0b0 !important; /* Světlá barva odkazů */
+    color: var(--primary-dark) !important;
+    opacity: 0.7; /* Lehce zprůhledníme, aby nebyly tak výrazné jako nadpisy */
     text-decoration: none;
     transition: all 0.3s ease;
 }
 
 .footer-links a:hover {
-    color: #e77e23 !important; /* Oranžová při najetí */
+    color: var(--accent-orange) !important; /* Oranžová zůstává */
+    opacity: 1;
     padding-left: 5px;
 }
 
-/* Značka */
+/* Značka (TripTrack logo) */
 .text-accent {
-    color: #e77e23 !important;
+    color: var(--accent-orange) !important;
 }
 
 /* Sociální ikony */
@@ -48,26 +57,30 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #2a2a2a; /* Světlejší pozadí ikon */
-    color: #fff !important;
+    
+    /* Pozadí ikon: Použijeme barvu pozadí stránky (--bg-cream) pro kontrast */
+    background-color: var(--bg-cream);
+    color: var(--primary-dark) !important;
+    
     font-size: 1.2rem;
     transition: all 0.3s ease;
     text-decoration: none;
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
 }
 
 .social-link:hover {
-    background-color: #e77e23;
-    color: white !important;
+    background-color: var(--accent-orange);
+    color: white !important; /* Na oranžové musí být text bílý */
     transform: translateY(-3px);
-    border-color: #e77e23;
+    border-color: var(--accent-orange);
 }
 
 /* Spodní lišta */
 .footer-bottom {
-    border-color: #333 !important; /* Tmavě šedá čára */
+    border-color: var(--border-color) !important; /* Použijeme naši dynamickou barvu čar */
 }
 
 .footer-bottom p {
-    color: #888 !important; /* Tmavší šedá pro copyright */
+    color: var(--primary-dark) !important;
+    opacity: 0.6;
 }

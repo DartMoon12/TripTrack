@@ -1,4 +1,59 @@
-/* App base reset for fullscreen pages */
+/* src/App.css */
+
+/* =========================================
+   1. DEFINICE BAREV (THEMING)
+   ========================================= */
+
+/* SVĚTLÝ REŽIM (Výchozí) */
+:root {
+  --bg-cream: #fcf6f0;           /* Pozadí stránky */
+  --primary-dark: #2c3e50;       /* Hlavní text (tmavý) */
+  --card-bg: #ffffff;            /* Pozadí karet */
+  --accent-light: #fff2e4;       /* Pozadí štítků */
+  --accent-orange: #e77e23;      /* Oranžová (zůstává stejná) */
+  --border-color: rgba(0,0,0,0.1); /* Jemné orámování */
+}
+
+/* TMAVÝ REŽIM (Aktivuje se přepínačem) */
+[data-bs-theme="dark"] {
+  --bg-cream: #0f1012;           /* Velmi hluboká, téměř černá (pozadí webu) */
+  --primary-dark: #e4e6eb;       /* Téměř bílá, měkká na oči (text) */
+  --card-bg: #1d1f23;            /* O stupeň světlejší šedá (karty) */
+  --accent-light: #2a2d33;       /* Tmavě šedá pro pozadí tagů */
+  --accent-orange: #ff9f43;      /* Oranžová (trochu jasnější pro kontrast) */
+  --border-color: rgba(255,255,255,0.08); /* Velmi jemná linka pro oddělení */
+}
+
+/* =========================================
+   2. GLOBÁLNÍ NASTAVENÍ
+   ========================================= */
+
+body {
+  background-color: var(--bg-cream);
+  color: var(--primary-dark);
+  /* Plynulý přechod při přepnutí */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* Oprava Navbaru, aby reagoval na změnu */
+.navbar {
+  background-color: var(--card-bg) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Oprava Modálních oken v tmavém režimu */
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--card-bg);
+  color: var(--primary-dark);
+  border-color: var(--border-color);
+}
+
+/* =========================================
+   3. TVOJE PŮVODNÍ STYLY
+   ========================================= */
+
 .app-root {
   margin: 0;
   padding: 0;
@@ -42,6 +97,9 @@
 
 .card {
   padding: 2em;
+  /* Přidáme, aby i tato obecná karta reagovala na barvy */
+  background-color: var(--card-bg);
+  color: var(--primary-dark);
 }
 
 .read-the-docs {

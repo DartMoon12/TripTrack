@@ -1,3 +1,5 @@
+/* src/components/Map/TripMap.css */
+
 /* ================================================= */
 /* GLOBAL MAP CONTAINERS */
 /* ================================================= */
@@ -5,10 +7,10 @@
 .map-wrapper {
   position: relative;
   width: 100vw;
-  /* Výška mapy: celá výška okna mínus výška navbaru (Předpokládáme 5rem = 80px) */
-  height: calc(100vh - 5rem); 
-  /* Zajišťuje, že mapa začíná hned pod fixním navbaru */
+  /* Výška mapy: celá výška okna mínus výška navbaru */
+  height: calc(100vh - 56px); 
   margin-top: 0; 
+  /* Zde barvu pozadí řešit nemusíme, mapu překryje Google Maps canvas */
 }
 
 /* Kontejner mapy pro react-google-maps */
@@ -24,39 +26,54 @@
 
 .map-search-panel {
   position: absolute;
-  top: 24px; /* Odsazení od horního okraje mapy */
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10; /* Zůstane nad mapou */
+  z-index: 10;
   
-  /* Plovoucí a průhledný design */
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.08);
   
-  /* Rozměry a vzhled */
+  /* 💥 ZMĚNA: Použití proměnné pro pozadí panelu */
+  /* V light mode bílá, v dark mode tmavě šedá */
+  background: var(--card-bg);
+  
+  /* 💥 ZMĚNA: Rámeček podle režimu */
+  border: 1px solid var(--border-color);
+  
   border-radius: 12px;
   padding: 12px 16px;
   gap: 10px;
   width: min(800px, 95%); 
+  
+  /* Přidáme stín, aby panel nesplýval s mapou */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
-/* Styl pro input pole Autocomplete */
+/* Styl pro input pole Autocomplete a Select */
 .map-search-input {
-  /* Přepis Bootstrap form-control pro čistší vzhled */
-  border: none !important;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.1);
+  /* Přepis Bootstrap form-control */
+  border: 1px solid var(--border-color) !important;
+  box-shadow: none !important; /* Odstraníme stín, aby to bylo čistší */
   padding: 12px 16px;
   font-size: 16px;
   transition: all 0.2s;
   
-  background-color: white !important;
+  /* 💥 ZMĚNA: Pozadí a text inputu */
+  /* Použijeme barvu pozadí stránky, aby se input odlišil od panelu (karty) */
+  background-color: var(--bg-cream) !important;
+  color: var(--primary-dark) !important;
+}
+
+/* Placeholder text (např. "Hledat...") musíme taky obarvit, jinak by nebyl vidět */
+.map-search-input::placeholder {
+  color: var(--primary-dark);
+  opacity: 0.5;
 }
 
 .map-search-input:focus {
-  /* Akcentní barva při focusu (#e77e23 je barva z TripTrack designu) */
-  border-color: #e77e23 !important; 
-  box-shadow: 0 0 0 0.25rem rgba(231, 126, 35, 0.25);
+  /* Akcentní oranžová při psaní */
+  border-color: var(--accent-orange) !important; 
+  box-shadow: 0 0 0 0.25rem rgba(231, 126, 35, 0.25) !important;
 }
 
 /* ================================================= */
@@ -69,29 +86,46 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Tmavý overlay */
-  backdrop-filter: blur(5px);
+  /* Overlay zůstává vždy tmavý a poloprůhledný, aby se mapa ztmavila */
+  background-color: rgba(0, 0, 0, 0.6); 
+  backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Musí být nad panelem vyhledávání (který má z-index: 10) */
+  z-index: 1000;
 }
 
 .save-modal-card {
   width: 100%;
   max-width: 500px;
-  border: none;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  /* Animace pro plynulé zobrazení */
   animation: fadeIn 0.3s ease-out;
+  
+  /* 💥 ZMĚNA: Barvy modálního okna */
+  background-color: var(--card-bg);
+  color: var(--primary-dark);
 }
 
-/* Zajistíme, že popisek formuláře bude tmavý */
+/* 💥 ZMĚNA: Popisky formuláře */
 .save-modal-card .form-label {
-    color: #2c3e50; 
+    color: var(--primary-dark);
+    font-weight: 600;
 }
 
-/* Jednoduchá animace */
+/* Třídy pro inputy uvnitř modálu (pokud nejsou globálně nastylované) */
+.save-modal-card .form-control,
+.save-modal-card .form-select {
+    background-color: var(--bg-cream);
+    color: var(--primary-dark);
+    border-color: var(--border-color);
+}
+
+.save-modal-card .form-control:focus {
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 0.25rem rgba(231, 126, 35, 0.25);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -100,5 +134,45 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ================================================= */
+/* 📱 RESPONZIVITA PRO MOBILY (Oprava panelu) 📱 */
+/* ================================================= */
+
+@media (max-width: 768px) {
+  /* 1. Změníme směr panelu z vodorovného na svislý */
+  .map-search-panel {
+    flex-direction: column !important; 
+    align-items: stretch !important; /* Roztáhne prvky na celou šířku */
+    top: 15px; /* Posuneme to kousek výš, aby to nezabíralo moc místa mapě */
+    padding: 12px;
+    gap: 10px !important;
+    width: 95%; /* Pojistka pro šířku */
+  }
+
+  /* 2. Přebijeme inline styly (flex: 2 a flex: 1) v JSX */
+  .map-search-panel > div {
+    width: 100%;
+    flex: none !important;
+  }
+
+  /* 3. Obal pro tlačítka - povolíme zalamování */
+  .map-search-panel .d-flex.gap-2 {
+    flex-wrap: wrap;
+  }
+
+  /* 4. Tlačítka a upozornění na mobilu roztáhneme */
+  .map-search-panel .btn {
+    flex: 1; /* Tlačítka se rovnoměrně rozdělí o místo */
+    min-width: 45%; /* Maximálně dvě tlačítka na jeden řádek */
+    padding: 10px;
+    font-weight: 600;
+  }
+
+  .map-search-panel .alert {
+    width: 100%;
+    text-align: center;
   }
 }

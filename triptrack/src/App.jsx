@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import { useState } from 'react'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -15,7 +13,6 @@ import RoutesPage from './components/RoutesPage/RoutesPage'
 import { RouteStorageProvider } from './Hooks/RouteStorageContext';
 import { Toaster } from 'react-hot-toast';
 import Favorite from './components/Favorite/Favorite';
-
 // 💥 1. Import Footeru
 import Footer from './components/Footer/Footer';
 

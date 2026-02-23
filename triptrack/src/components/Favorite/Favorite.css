@@ -1,20 +1,12 @@
 /* src/components/Favorite/Favorite.css */
 
-:root {
-  --bg-cream: #fcf6f0;           /* Hlavní pozadí */
-  --primary-dark: #2c3e50;       /* Tmavý text */
-  --accent-orange: #e77e23;      /* Akcentní oranžová */
-  --accent-light: #fff2e4;       /* Světlá oranžová (pro pozadí tagů) */
-  
-  --card-shadow: 0 10px 30px rgba(44, 62, 80, 0.05);
-  --card-radius: 24px;
-}
+/* ❌ PŮVODNÍ :root JSME SMAZALI (barvy už řídí App.css) ❌ */
 
 .favorites-page-wrapper {
-  background-color: var(--bg-cream);
+  background-color: var(--bg-cream); /* ✅ Bere z App.css */
   min-height: 100vh;
   padding-bottom: 80px;
-  color: var(--primary-dark);
+  color: var(--primary-dark);        /* ✅ Bere z App.css */
 }
 
 .page-title {
@@ -26,9 +18,15 @@
 /* --- Karty tras (Moderní styl) --- */
 .route-card-modern {
   border: none;
-  border-radius: var(--card-radius);
-  background: white;
-  box-shadow: var(--card-shadow);
+  border-radius: 24px;
+  
+  /* 💥 Pozadí karty podle režimu */
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color); /* Jemný rámeček pro Dark Mode */
+  
+  /* Stín uděláme univerzálnější */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
   height: 100%;
@@ -36,15 +34,90 @@
 
 .route-card-modern:hover {
   transform: translateY(-8px);
-  box-shadow: 0 15px 40px rgba(44, 62, 80, 0.1);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--accent-orange);
 }
 
+/* --- Obal obrázku (Fix pro chybějící fotky) --- */
 .card-img-wrapper {
   height: 180px;
   position: relative;
-  background-color: #ecf0f1;
+  
+  /* Použijeme tmavší pozadí než má karta */
+  background-color: #15171a; 
+  
+  /* Jemná linka zespodu */
+  border-bottom: 1px solid var(--border-color);
+  
+  /* Vycentrování ikonky */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column; 
 }
 
+/* Styl pro tu ikonku mapy uvnitř */
+.card-img-wrapper svg {
+    color: var(--primary-dark);
+    opacity: 0.1; 
+    width: 48px;
+    height: 48px;
+}
+
+/* Styl pro text "Bez náhledu" */
+.card-img-wrapper span {
+    margin-top: 8px;
+    color: var(--primary-dark);
+    opacity: 0.2;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- Tlačítko Hvězdička (OBLÍBENÉ) - FINÁLNÍ FIX --- */
+
+/* 1. Základní tlačítko (Světlý režim) */
+.card-img-wrapper .btn.rounded-circle {
+    background-color: white;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: absolute !important; /* Aby zůstalo v rohu */
+    z-index: 10;
+}
+
+/* 2. Tmavý režim - tlačítko (Pozadí) */
+[data-bs-theme="dark"] .card-img-wrapper .btn.rounded-circle {
+    background-color: rgba(30, 30, 30, 0.6) !important; /* Tmavé sklo */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(4px);
+}
+
+/* 3. Hover efekt (Najetí myší) */
+.card-img-wrapper .btn.rounded-circle:hover {
+    transform: scale(1.15) rotate(5deg);
+    border-color: var(--accent-orange) !important;
+}
+
+[data-bs-theme="dark"] .card-img-wrapper .btn.rounded-circle:hover {
+    background-color: rgba(50, 50, 50, 0.9) !important;
+}
+
+/* 4. 🌟 AKTIVNÍ HVĚZDA (ŽLUTÁ) - Musí být super specifická */
+[data-bs-theme="dark"] .card-img-wrapper .btn .text-warning {
+    color: #ffc107 !important; /* Sytá žlutá */
+    filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.8)); /* Silná záře */
+    opacity: 1 !important;
+}
+
+/* 5. NEAKTIVNÍ HVĚZDA (ŠEDÁ) */
+[data-bs-theme="dark"] .card-img-wrapper .btn .text-secondary,
+[data-bs-theme="dark"] .card-img-wrapper .btn .text-muted {
+    color: rgba(255, 255, 255, 0.3) !important; /* Jemně šedá */
+}
+
+
+/* Odznak hodnocení */
 .rating-badge {
   background: rgba(44, 62, 80, 0.9);
   backdrop-filter: blur(4px);
@@ -54,6 +127,7 @@
   padding: 6px 12px;
   border-radius: 20px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  position: absolute; /* Aby byl v rohu */
 }
 
 /* --- Tagy --- */
@@ -71,41 +145,39 @@
 
 .tag-pill:hover {
     background-color: var(--accent-orange);
-    color: white;
+    color: white; 
 }
 
-/* --- Tlačítka --- */
+/* --- Tlačítka (Zobrazit) --- */
 .btn-action-primary {
+  /* V základu (světlý režim) tmavé tlačítko */
   background-color: var(--primary-dark);
-  color: white;
+  color: var(--bg-cream);
+  
   border-radius: 50px;
   padding: 8px 20px;
   font-weight: 600;
-  border: none;
+  border: 1px solid transparent;
   transition: all 0.2s;
 }
 
-.btn-action-primary:hover {
+/* Speciální úprava jen pro TMAVÝ režim */
+[data-bs-theme="dark"] .btn-action-primary {
+    background-color: rgba(255, 255, 255, 0.05); /* Průhledná šedá */
+    color: var(--primary-dark); /* Bílý text */
+    border: 1px solid var(--border-color); /* Jemný rámeček */
+}
+
+.btn-action-primary:hover,
+[data-bs-theme="dark"] .btn-action-primary:hover {
   background-color: var(--accent-orange);
   color: white;
-  transform: scale(1.02);
+  border-color: var(--accent-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(231, 126, 35, 0.3); /* Oranžová záře */
 }
 
-.btn-action-outline {
-  background-color: transparent;
-  color: var(--accent-orange);
-  border: 2px solid var(--accent-orange);
-  border-radius: 50px;
-  padding: 6px 15px;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-
-.btn-action-outline:hover {
-  background-color: var(--accent-orange);
-  color: white;
-}
-
+/* Tlačítko Koš */
 .btn-delete {
   width: 36px;
   height: 36px;
@@ -113,9 +185,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #fee;
-  background: #fff5f5;
+  border: 1px solid transparent;
+  
+  /* Průhledná červená (funguje v obou režimech) */
+  background-color: rgba(231, 76, 60, 0.1); 
   color: #e74c3c;
+  
   transition: all 0.2s;
 }
 

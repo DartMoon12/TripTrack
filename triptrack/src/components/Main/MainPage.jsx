@@ -1,19 +1,26 @@
+// src/components/MainPage/MainPage.jsx
+
 import React from 'react';
-import { FaMapMarkerAlt, FaRoute, FaHeart } from 'react-icons/fa'; 
-import heroImage from '../../assets/hero.svg'; 
-import './MainPage.css'; 
-// 💥 Importujeme useAuth a useNavigate pro kontrolu stavu a přesměrování
-import { useAuth } from '../Auth/AuthContext'; 
-import { useNavigate } from 'react-router-dom';
+// Importujeme Link pro odkazy, které neobnovují stránku
+import { Link, useNavigate } from 'react-router-dom';
+import { FaMapMarkerAlt, FaRoute, FaHeart } from 'react-icons/fa';
+import heroImage from '../../assets/hero.svg';
+import './MainPage.css';
+import { useAuth } from '../Auth/AuthContext';
 
 export default function MainPage() {
   
-  // 💥 Využití hooků
+  // --- 1. HOOKY (Nástroje) ---
+  // Zjistíme, jestli je uživatel přihlášený (currentUser)
   const { currentUser } = useAuth();
+  // Získáme funkci pro "přesměrování" (navigaci) v kódu
   const navigate = useNavigate();
 
+  // --- 2. DATA PRO KARTY ---
+  // Místo abychom psali 3x stejný HTML kód pro karty dole,
+  // uděláme si pole objektů a pak ho jenom "projdedeme" (map).
+  // Je to čistší a snadno se přidávají nové karty.
   const features = [
-    // ... (data o kartách zůstávají stejná)
     { 
       title: 'Mapa', 
       description: 'Zobrazování trasy a bodů zájmu pro snadnou orientaci.', 
@@ -34,20 +41,22 @@ export default function MainPage() {
     },
   ];
 
-  // 💥 Nová funkce pro zpracování kliknutí na tlačítko "Začít"
-  const handleStartClick = (e) => {
-    e.preventDefault();
+  // --- 3. LOGIKA TLAČÍTKA "ZAČÍT" ---
+  const handleStartClick = () => {
+    // Tady se rozhodujeme, kam uživatele pošleme
     if (currentUser) {
-      // Uživatel JE přihlášený: Přesměrovat na hlavní chráněnou stránku
-      navigate('/mapa'); // Změňte na libovolnou chráněnou route, např. /mapa
+      // Když už je přihlášený, jde rovnou na mapu
+      navigate('/mapa');
     } else {
-      // Uživatel NENÍ přihlášený: Přesměrovat na přihlášení/registraci
-      navigate('/login'); // Nebo /register
+      // Když není, musí se nejdřív přihlásit
+      navigate('/login');
     }
   };
 
+  // --- 4. VYKRESLENÍ (UI) ---
   return (
     <div className="main-page">
+      {/* Hero sekce (ta velká horní část) */}
       <header className="hero-header container py-5 pt-lg-5">
         
         <div className="row justify-content-center align-items-center">
@@ -57,14 +66,17 @@ export default function MainPage() {
             <p className="lead text-muted mb-4 fs-5">
               Plánuj, sleduj a objevuj své cesty. Vše na jednom místě.
             </p>
-            {/* 💥 ZMĚNA: Tlačítko teď volá handleStartClick a není pevný odkaz */}
-            <a 
-              href={currentUser ? '/mapa' : '/login'} 
+            
+            {/* ZMĚNA: Použil jsem <button> místo <a>.
+               Protože tohle tlačítko dělá akci (kontroluje přihlášení), 
+               hodí se víc button s onClickem.
+            */}
+            <button 
               onClick={handleStartClick} 
-              className="btn btn-dark btn-lg"
+              className="btn btn-dark btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm"
             >
               Začít
-            </a>
+            </button>
           </div>
 
           <div className="col-12 col-lg-6 mt-4 mt-lg-0 ">
@@ -82,14 +94,16 @@ export default function MainPage() {
         
       </header>
 
+      {/* Sekce s kartami (Features) */}
       <section className="container py-5 mt-5">
         <div className="row g-4 justify-content-center">
+          {/* Tady "mapujeme" přes naše pole features. Pro každou položku vyrobíme jeden sloupec. */}
           {features.map((feature) => (
             <div className="col-md-4" key={feature.title}>
-              <a href={feature.to} className="feature-card-link text-decoration-none h-100">
-                <div className="feature-card text-center p-4 h-100 border rounded-3 shadow-sm bg-white">
+              <Link to={feature.to} className="feature-card-link text-decoration-none h-100 d-block">
+                <div className="feature-card text-center p-4 h-100 border rounded-4 shadow-sm bg-white transition-hover">
                   
-                  <div className="feature-icon-wrapper mb-3 mx-auto p-3 rounded-3 bg-accent-light">
+                  <div className="feature-icon-wrapper mb-3 mx-auto p-3 rounded-circle bg-accent-light" style={{ width: 'fit-content' }}>
                     <feature.icon className="text-accent" size={30} /> 
                   </div>
                   
@@ -97,7 +111,8 @@ export default function MainPage() {
                   <p className="text-muted small mb-0">{feature.description}</p>
                   
                 </div>
-              </a>
+              </Link>
+
             </div>
           ))}
         </div>

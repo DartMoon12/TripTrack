@@ -1,29 +1,41 @@
-import { Link, useNavigate } from 'react-router-dom'; // 💥 PŘIDÁNÍ useNavigate
+import React from 'react';
+// Importujeme Link (pro klikací odkazy) a useNavigate (pro přesměrování v kódu)
+import { Link, useNavigate } from 'react-router-dom'; 
 import { useAuth } from '../Auth/AuthContext';
+import ThemeToggle from '../Theme/ThemeToggle';
+import './navbar.css';
 
 function Navbar() {
-  // Destructuring s fallbackem
+  // --- 1. NAČTENÍ DAT O UŽIVATELI ---
+  // Tady je takový "bezpečnostní pás". Zkoušíme načíst currentUser a logout.
+  // Ty otazníky a ?? znamenají: "Kdyby náhodou useAuth nefungovalo, 
+  // tak mi místo chyby vrať prázdného uživatele (null) a prázdnou funkci."
+  // Díky tomu aplikace nespadne, i když se něco pokazí v Contextu.
   const { currentUser, logout } = useAuth?.() ?? { currentUser: null, logout: async () => {} };
   
-  // 💥 Využití hooku pro navigaci
+  // --- 2. NAVIGACE ---
+  // useNavigate je jako "teleport". Můžeme ho zavolat kdekoliv v kódu (nejen po kliknutí na odkaz).
   const navigate = useNavigate();
 
-  // 💥 Helper funkce pro odhlášení a přesměrování
+  // --- 3. LOGIKA ODHLÁŠENÍ ---
   const handleLogout = async () => {
+    // Nejdřív počkáme, až Firebase uživatele skutečně odhlásí
     await logout();
-    // Po odhlášení přesměrujeme uživatele na domovskou stránku
+    // A teprve POTOM ho přesměrujeme na úvodní stránku (aby nezůstal viset třeba na profilu)
     navigate('/'); 
   };
 
-
-  // Helper funkce pro NavLink
+  // --- 4. ČISTÝ KÓD (DRY - Don't Repeat Yourself) ---
+  // Místo abychom dole v HTML psali 4x <li className="...">,
+  // vytvoříme si malou pomocnou komponentu jen pro tenhle soubor.
   const NavLink = ({ to, children }) => (
     <li className="nav-item">
       <Link className="nav-link text-primary-dark" to={to}>{children}</Link>
     </li>
   );
   
-  // URL adresy z tvého návrhu
+  // A tady si připravíme data. Když budeme chtít přidat novou stránku,
+  // jen ji dopíšeme do tohoto pole a nemusíme sahat do složitého HTML dole.
   const navigationLinks = [
     { name: 'Domů', to: '/' },
     { name: 'Mapa', to: '/mapa' },
@@ -31,7 +43,9 @@ function Navbar() {
     { name: 'Oblíbené', to: '/oblibene' },
   ];
 
+  // --- 5. VYKRESLENÍ (UI) ---
   return (
+    // Bootstrap třídy pro hezký vzhled (navbar-expand-lg dělá to menu pro mobily)
     <nav className="navbar navbar-expand-lg border-bottom py-3">
       <div className="container d-flex justify-content-between align-items-center">
         
@@ -40,8 +54,8 @@ function Navbar() {
           TripTrack
         </Link>
         
-        {/* Toggle tlačítko pro mobil */}
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        {/* Hamburger menu (tlačítko, které se ukáže jen na mobilu) */}
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
         </button>
 
@@ -49,6 +63,8 @@ function Navbar() {
           
           {/* Odkazy uprostřed */}
           <ul className="navbar-nav mx-auto gap-4">
+            {/* Tady je to kouzlo: Vezmeme pole 'navigationLinks' a pro každou položku
+                vyrobíme <NavLink>. Je to mnohem kratší a přehlednější. */}
             {navigationLinks.map((link) => (
               <NavLink key={link.name} to={link.to}>{link.name}</NavLink>
             ))}
@@ -56,33 +72,42 @@ function Navbar() {
 
           {/* Uživatelský blok vpravo */}
           <div className="d-flex align-items-center ms-auto ms-lg-0">
+            <ThemeToggle />
+            
+            {/* PODMÍNĚNÉ VYKRESLOVÁNÍ (Ternární operátor) */}
+            {/* Ptáme se: Je uživatel nepřihlášený (!currentUser)? */}
             {!currentUser ? (
+              
+              // MOŽNOST A: Uživatel NENÍ přihlášený -> Ukaž tlačítka
               <div className="d-flex gap-2">
                 <Link className="btn btn-outline-primary" to="/login">Přihlášení</Link>
                 <Link className="btn btn-dark" to="/register">Registrace</Link>
               </div>
+
+
             ) : (
-              // Přihlášený uživatel s Dropdownem
+              
+              // MOŽNOST B: Uživatel JE přihlášený -> Ukaž jeho email a menu
               <div className="dropdown">
                 <button 
                   className="btn btn-link text-decoration-none dropdown-toggle text-primary-dark" 
                   type="button" 
                   data-bs-toggle="dropdown" 
-                  aria-expanded="false"
                 >
                   {currentUser.email}
                 </button>
                 <ul className="dropdown-menu dropdown-menu-end">
-                  <li><Link className="dropdown-item" to="/profile">Můj profil</Link></li>
+                  
                   <li><hr className="dropdown-divider" /></li>
                   <li>
-                    {/* 💥 ZMĚNA: Navázání handleLogout funkce na tlačítko */}
+                    {/* Tlačítko pro odhlášení volá naši funkci nahoře */}
                     <button className="dropdown-item text-danger" onClick={handleLogout}>
                         Odhlásit se
                     </button>
                   </li>
                 </ul>
               </div>
+
             )}
           </div>
         </div>
