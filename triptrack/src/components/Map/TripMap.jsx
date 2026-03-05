@@ -182,15 +182,34 @@ export default function TripMap() {
     setIsCalculated(true);
     if (status === 'OK' && result) {
       setDirections(result);
-      const leg = result.routes[0].legs[0];
-      setRouteInfo({ distance: leg.distance.text, duration: leg.duration.text, mode: travelMode });
+      
+      // 💥 OPRAVA: Sečteme všechny úseky trasy (legs)
+      let totalDistanceValue = 0;
+      let totalDurationValue = 0;
+
+      result.routes[0].legs.forEach(leg => {
+          totalDistanceValue += leg.distance.value; // metry
+          totalDurationValue += leg.duration.value; // sekundy
+      });
+
+      // Převedení celkové vzdálenosti na text (např. 84,0 km)
+      const distanceInKm = (totalDistanceValue / 1000).toFixed(1).replace('.', ',');
+      const distanceText = totalDistanceValue >= 1000 ? `${distanceInKm} km` : `${totalDistanceValue} m`;
+
+      // Převedení celkového času na text (např. 2 h 15 min)
+      const hours = Math.floor(totalDurationValue / 3600);
+      const minutes = Math.floor((totalDurationValue % 3600) / 60);
+      const durationText = hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
+
+      setRouteInfo({ distance: distanceText, duration: durationText, mode: travelMode });
+      
     } else if (status === 'ZERO_RESULTS') {
-        // 💥 OPRAVA: Automatický fallback pro kola na chůzi
+        // Automatický fallback pro kola na chůzi
         if (travelMode === 'BICYCLING') {
             toast.error("Google tu nezná cyklotrasu. Přepínám automaticky na 'Chůzi'...", { duration: 4000 });
-            setTravelMode('WALKING'); // Přepneme mód na chůzi
-            setIsCalculated(false); // Resetujeme kalkulaci, aby to React zkusil znovu
-            return; // Ukončíme běh, React udělá re-render a zavolá API znovu s novým módem
+            setTravelMode('WALKING'); 
+            setIsCalculated(false); 
+            return; 
         }
         
         setRouteInfo({ distance: 'Trasa nenalezena', duration: 'N/A', mode: travelMode }); 
