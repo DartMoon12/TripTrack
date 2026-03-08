@@ -183,7 +183,7 @@ export default function TripMap() {
     if (status === 'OK' && result) {
       setDirections(result);
       
-      // 💥 OPRAVA: Sečteme všechny úseky trasy (legs)
+      // Sečteme všechny úseky trasy (legs)
       let totalDistanceValue = 0;
       let totalDurationValue = 0;
 
@@ -322,6 +322,7 @@ export default function TripMap() {
             zoomControl: true,
         }}
       >
+         {/* Hledaný bod z vyhledávače (bez čísla) */}
          {marker && <Marker position={marker} />}
          
          {/* OPRAVA VOLÁNÍ API (Zabránění prázdným bodům a ochrana TravelMode) */}
@@ -341,8 +342,22 @@ export default function TripMap() {
              />
          )}
 
+         {/* Vykreslení trasy (nastaveno potlačení výchozích markerů Google Map přes suppressMarkers) */}
          {directions && (<DirectionsRenderer directions={directions} options={{ polylineOptions: { strokeColor: '#e77e23', strokeWeight: 4 }, suppressMarkers: true }} />)}
-         {path.map((pos, idx) => (<Marker key={idx} position={pos} />))}
+         
+         {/* 💥 OPRAVA: Vykreslení bodů trasy S ČÍSLEM */}
+         {path.map((pos, idx) => (
+            <Marker 
+                key={idx} 
+                position={pos} 
+                label={{
+                    text: (idx + 1).toString(), // Číslo bodu (index + 1, abychom nezačínali nulou)
+                    color: "white",             // Bílá barva textu
+                    fontWeight: "bold",         // Tučný text
+                    fontSize: "14px"            // Velikost písma
+                }}
+            />
+         ))}
          
          {/* Polyline přijímá [] (prázdné pole) pokud nemá být vidět, čímž donutíme mapu čáru smazat */}
          <Polyline 
