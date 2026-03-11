@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-// 💥 PŘIDAL JSEM "FaMap" do importů
-import { FaTrash, FaClock, FaRulerHorizontal, FaStar, FaSearch, FaUserCircle, FaMapMarkerAlt, FaFilter, FaMap } from 'react-icons/fa';
+// 💥 PŘIDAL JSEM "FaAlignLeft" do importů pro ikonku popisku
+import { FaTrash, FaClock, FaRulerHorizontal, FaStar, FaSearch, FaUserCircle, FaMapMarkerAlt, FaFilter, FaMap, FaAlignLeft } from 'react-icons/fa';
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
 import { useAuth } from '../Auth/AuthContext';
 import './RoutesPage.css';
@@ -81,16 +81,14 @@ export default function RoutesPage() {
 
     return (
       <div className="col-12 col-md-6 col-lg-4 d-flex align-items-stretch" key={route.id}>
-        <div className="route-card-modern w-100">
+        <div className="route-card-modern w-100 d-flex flex-column">
           
           {/* --- HORNÍ ČÁST (Obrázek) --- */}
           <div className="card-img-wrapper">
             {route.image ? (
               <img src={route.image} className="w-100 h-100 object-fit-cover" alt={route.name} />
             ) : (
-              // 💥 NOVÝ VZHLED PRO CHYBĚJÍCÍ OBRÁZEK
               <div className="placeholder-content h-100 w-100 d-flex flex-column align-items-center justify-content-center">
-                 {/* Velká ikona mapy na pozadí */}
                  <FaMap className="placeholder-icon" />
                  <span className="placeholder-text">Bez náhledu</span>
               </div>
@@ -109,16 +107,37 @@ export default function RoutesPage() {
 
             <button 
                 className="btn rounded-circle d-flex align-items-center justify-content-center top-0 end-0 m-3"
-                style={{ width: '38px', height: '38px' }}
+                style={{ width: '38px', height: '38px', position: 'absolute', background: 'rgba(255,255,255,0.8)', border: 'none', zIndex: 10 }}
                 onClick={(e) => { e.stopPropagation(); toggleFavorite(route.id, !isMyRoute); }}
             >
                 <FaStar size={18} className={(isMyRoute ? route.isFavorite : isFav) ? 'text-warning' : 'text-secondary'} />
             </button>
           </div>
 
-          <div className="card-body p-4 d-flex flex-column">
+          {/* --- SPODNÍ ČÁST (Obsah) --- */}
+          <div className="card-body p-4 d-flex flex-column flex-grow-1">
             <h5 className="fw-bold mb-2 text-truncate" style={{ color: 'var(--primary-dark)' }}>{route.name}</h5>
             
+            {/* 💥💥💥 TADY JE TEN POPISEK TRASY, KTERÝ V PŘEDCHOZÍM KÓDU CHYBĚL 💥💥💥 */}
+            {route.description ? (
+                <p className="small mb-3" style={{ 
+                    color: 'var(--primary-dark)', 
+                    opacity: 0.8,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2, 
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    minHeight: '40px' 
+                }}>
+                    <FaAlignLeft className="me-2 opacity-50" />
+                    {route.description}
+                </p>
+            ) : (
+                <p className="small mb-3 fst-italic" style={{ color: 'var(--primary-dark)', opacity: 0.4, minHeight: '40px' }}>
+                   Bez popisku
+                </p>
+            )}
+
             <div className="d-flex flex-wrap gap-2 mb-3">
                 {route.tags && route.tags.length > 0 ? (
                     route.tags.map(t => (
@@ -131,15 +150,15 @@ export default function RoutesPage() {
                 )}
             </div>
 
-            <div className="d-flex gap-4 small mb-4" style={{ color: 'var(--primary-dark)', opacity: 0.7 }}>
-              <span className="d-flex align-items-center"><FaRulerHorizontal className="text-warning me-2" /> {route.distance}</span>
-              <span className="d-flex align-items-center"><FaClock className="text-warning me-2" /> {route.duration}</span>
+            <div className="d-flex justify-content-between gap-4 small mb-4 mt-auto pt-3 border-top" style={{ color: 'var(--primary-dark)', opacity: 0.7 }}>
+              <span className="d-flex align-items-center fw-medium"><FaRulerHorizontal className="text-warning me-2" /> {route.distance}</span>
+              <span className="d-flex align-items-center fw-medium"><FaClock className="text-warning me-2" /> {route.duration}</span>
             </div>
 
-            <div className="mt-auto d-flex gap-2 align-items-center">
+            <div className="d-flex gap-2 align-items-center w-100">
               {!isMyRoute && (
                 <button className="btn-action-outline flex-grow-1" onClick={() => openReviewModal(route)}>
-                  recenze
+                  Recenze
                 </button>
               )}
               
@@ -155,8 +174,9 @@ export default function RoutesPage() {
                       deleteRoute(route.id, false);
                     }
                   }} 
-                  className="btn-delete" 
+                  className="btn btn-outline-danger d-flex align-items-center justify-content-center" 
                   title="Smazat trasu"
+                  style={{ width: '42px', height: '42px', borderRadius: '12px' }}
                 >
                   <FaTrash size={14} />
                 </button>

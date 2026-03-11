@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom';
-// Importujeme vše potřebné pro Google Mapy
 import {
     GoogleMap,
     useLoadScript,
@@ -13,89 +12,32 @@ import {
     DirectionsRenderer
 } from "@react-google-maps/api";
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
-// 💥 DŮLEŽITÉ: Import hooku pro téma
 import { useTheme } from '../Theme/ThemeContext'; 
 import "./TripMap.css";
 import toast from 'react-hot-toast';
-import { FaCamera, FaTags } from 'react-icons/fa';
+import { FaCamera, FaTags, FaSearch, FaChevronUp } from 'react-icons/fa';
 
-// --- DEFINICE TMAVÉHO STYLU PRO MAPU ---
 const darkMapStyle = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#263c3f" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b9a76" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#38414e" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#212a37" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca5b3" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#746855" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1f2835" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#f3d19c" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#17263c" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#515c6d" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#17263c" }],
-  },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+  { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
 ];
 
-// Klíče a nastavení mapy
 const mapKey = import.meta.env.VITE_MAP_KEY;
 const libraries = ["places"];
-
-// Výchozí střed mapy (Praha)
 const center = { lat: 50.0755, lng: 14.4378 };
 
 const TRAVEL_MODES = {
@@ -105,7 +47,6 @@ const TRAVEL_MODES = {
   TRANSIT: '🚌 MHD',
 };
 
-// Seznam štítků
 const AVAILABLE_TAGS = [
     "Příroda", "Město", "Pro rodiny", "Náročná", 
     "Vyhlídka", "Asfalt", "Dobrodružství", "Pro kočárek", 
@@ -120,8 +61,8 @@ export default function TripMap() {
   const [routeInfo, setRouteInfo] = useState(null);
   const [travelMode, setTravelMode] = useState('DRIVING');
   const [isCalculated, setIsCalculated] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-  // Stavy pro uložení
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [routeName, setRouteName] = useState("");
   const [routeDescription, setRouteDescription] = useState("");
@@ -129,12 +70,9 @@ export default function TripMap() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
 
-  // VYTÁHNEME SI AKTUÁLNÍ TÉMA
   const { theme } = useTheme();
-
   const mapRef = useRef(null);
   const autocompleteRef = useRef(null);
-
   const { saveRoute, getRouteById } = useRoutesStorage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -182,21 +120,17 @@ export default function TripMap() {
     setIsCalculated(true);
     if (status === 'OK' && result) {
       setDirections(result);
-      
-      // Sečteme všechny úseky trasy (legs)
       let totalDistanceValue = 0;
       let totalDurationValue = 0;
 
       result.routes[0].legs.forEach(leg => {
-          totalDistanceValue += leg.distance.value; // metry
-          totalDurationValue += leg.duration.value; // sekundy
+          totalDistanceValue += leg.distance.value; 
+          totalDurationValue += leg.duration.value; 
       });
 
-      // Převedení celkové vzdálenosti na text (např. 84,0 km)
       const distanceInKm = (totalDistanceValue / 1000).toFixed(1).replace('.', ',');
       const distanceText = totalDistanceValue >= 1000 ? `${distanceInKm} km` : `${totalDistanceValue} m`;
 
-      // Převedení celkového času na text (např. 2 h 15 min)
       const hours = Math.floor(totalDurationValue / 3600);
       const minutes = Math.floor((totalDurationValue % 3600) / 60);
       const durationText = hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
@@ -204,14 +138,12 @@ export default function TripMap() {
       setRouteInfo({ distance: distanceText, duration: durationText, mode: travelMode });
       
     } else if (status === 'ZERO_RESULTS') {
-        // Automatický fallback pro kola na chůzi
         if (travelMode === 'BICYCLING') {
             toast.error("Google tu nezná cyklotrasu. Přepínám automaticky na 'Chůzi'...", { duration: 4000 });
             setTravelMode('WALKING'); 
             setIsCalculated(false); 
             return; 
         }
-        
         setRouteInfo({ distance: 'Trasa nenalezena', duration: 'N/A', mode: travelMode }); 
         setDirections(null);
     } else { 
@@ -290,22 +222,40 @@ export default function TripMap() {
 
   return (
     <div className="map-wrapper">
-      <div className="map-search-panel shadow-lg d-flex align-items-center gap-3">
-        <div style={{ flex: '2' }}>
-            <Autocomplete onLoad={(ac) => (autocompleteRef.current = ac)} onPlaceChanged={handlePlaceChanged}>
-                <input type="text" placeholder="🔍 Hledat..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="form-control map-search-input" />
-            </Autocomplete>
-        </div>
-        <div style={{ flex: '1' }}>
-             <select className="form-select map-search-input" value={travelMode} onChange={(e) => { setTravelMode(e.target.value); setDirections(null); setRouteInfo(null); setIsCalculated(false); }}>
-                {Object.entries(TRAVEL_MODES).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
-             </select>
-        </div>
-        <div className="d-flex gap-2">
-           {hasStartAndEnd && !isCalculated && (<button onClick={calculateRoute} className="btn btn-info">Vypočítat</button>)}
-           {routeInfo && (<div className={`alert py-2 px-3 m-0 ${routeInfo.distance.includes('Chyba') ? 'alert-warning' : 'alert-success'}`}>{routeInfo.distance}</div>)}
-           {routeInfo && !routeInfo.distance.includes('Chyba') && !routeInfo.distance.includes('nenalezena') && (<button onClick={openSaveModal} className="btn btn-dark">Uložit</button>)}
-           <button onClick={clearMap} className="btn btn-danger">Vymazat</button>
+      <div className="map-search-panel shadow-lg d-flex flex-column gap-3">
+        
+        {/* Tlačítko pro mobil a tablet */}
+        <button 
+            className="btn btn-light w-100 d-md-none fw-bold d-flex justify-content-center align-items-center gap-2 m-0"
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+            style={{ color: 'var(--primary-dark)' }}
+        >
+            {isPanelOpen ? <FaChevronUp /> : <FaSearch />} 
+            {isPanelOpen ? 'Skrýt nastavení' : 'Hledat a nastavit trasu'}
+        </button>
+
+        {/* Panel s ovládáním - na PC zobrazený a v jednom řádku, na mobilu schovaný/rozbalený pod sebou */}
+        <div className={`${isPanelOpen ? 'd-flex' : 'd-none'} d-md-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 w-100`}>
+            
+            <div style={{ flex: '2' }}>
+                <Autocomplete onLoad={(ac) => (autocompleteRef.current = ac)} onPlaceChanged={handlePlaceChanged}>
+                    <input type="text" placeholder="🔍 Hledat..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="form-control map-search-input w-100" />
+                </Autocomplete>
+            </div>
+            
+            <div style={{ flex: '1' }}>
+                 <select className="form-select map-search-input w-100" value={travelMode} onChange={(e) => { setTravelMode(e.target.value); setDirections(null); setRouteInfo(null); setIsCalculated(false); }}>
+                    {Object.entries(TRAVEL_MODES).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
+                 </select>
+            </div>
+            
+            <div className="d-flex flex-column flex-md-row gap-2">
+               {hasStartAndEnd && !isCalculated && (<button onClick={calculateRoute} className="btn btn-info">Vypočítat</button>)}
+               {routeInfo && (<div className={`alert py-2 px-3 m-0 text-center ${routeInfo.distance.includes('Chyba') ? 'alert-warning' : 'alert-success'}`}>{routeInfo.distance}</div>)}
+               {routeInfo && !routeInfo.distance.includes('Chyba') && !routeInfo.distance.includes('nenalezena') && (<button onClick={openSaveModal} className="btn btn-dark">Uložit</button>)}
+               <button onClick={clearMap} className="btn btn-danger">Vymazat</button>
+            </div>
+            
         </div>
       </div>
 
@@ -315,51 +265,43 @@ export default function TripMap() {
         zoom={12} 
         onClick={handleClick} 
         onLoad={(map) => (mapRef.current = map)}
-        // POUŽITÍ TMAVÉHO STYLU PODLE TÉMATU
         options={{
             styles: theme === 'dark' ? darkMapStyle : null,
             disableDefaultUI: false,
             zoomControl: true,
         }}
       >
-         {/* Hledaný bod z vyhledávače (bez čísla) */}
          {marker && <Marker position={marker} />}
          
-         {/* OPRAVA VOLÁNÍ API (Zabránění prázdným bodům a ochrana TravelMode) */}
          {hasStartAndEnd && !directions && !isCalculated && (
              <DirectionsService 
                 options={{ 
                     destination: path[path.length - 1], 
                     origin: path[0], 
-                    // Přidáme waypoints JEN KDYŽ máme víc jak 2 body a nejedná se o MHD
                     ...(path.length > 2 && travelMode !== 'TRANSIT' ? { 
                         waypoints: path.slice(1, -1).map(p => ({ location: p, stopover: true })) 
                     } : {}),
-                    // Pojistka: natáhneme přesný formát z načtené Google Maps knihovny
                     travelMode: window.google.maps?.TravelMode?.[travelMode] || travelMode 
                 }} 
                 callback={directionsCallback} 
              />
          )}
 
-         {/* Vykreslení trasy (nastaveno potlačení výchozích markerů Google Map přes suppressMarkers) */}
          {directions && (<DirectionsRenderer directions={directions} options={{ polylineOptions: { strokeColor: '#e77e23', strokeWeight: 4 }, suppressMarkers: true }} />)}
          
-         {/* 💥 OPRAVA: Vykreslení bodů trasy S ČÍSLEM */}
          {path.map((pos, idx) => (
             <Marker 
                 key={idx} 
                 position={pos} 
                 label={{
-                    text: (idx + 1).toString(), // Číslo bodu (index + 1, abychom nezačínali nulou)
-                    color: "white",             // Bílá barva textu
-                    fontWeight: "bold",         // Tučný text
-                    fontSize: "14px"            // Velikost písma
+                    text: (idx + 1).toString(),
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: "14px"
                 }}
             />
          ))}
          
-         {/* Polyline přijímá [] (prázdné pole) pokud nemá být vidět, čímž donutíme mapu čáru smazat */}
          <Polyline 
             path={(!directions && hasStartAndEnd) ? path : []} 
             options={{ strokeColor: "#e77e23", strokeWeight: 2, strokeOpacity: 0.5 }} 

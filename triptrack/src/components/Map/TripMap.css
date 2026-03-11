@@ -81,39 +81,51 @@
 /* ================================================= */
 
 .save-modal-overlay {
-  position: absolute;
+  position: fixed; /* 💥 ZMĚNA z absolute na fixed (drží na obrazovce) */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   /* Overlay zůstává vždy tmavý a poloprůhledný, aby se mapa ztmavila */
   background-color: rgba(0, 0, 0, 0.6); 
   backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999; /* 💥 ZMĚNA: Zvýšeno pro jistotu přes všechno ostatní */
+  padding: 1rem; /* 💥 PŘIDÁNO: Aby okno nebylo na mobilu úplně u okrajů */
 }
 
 .save-modal-card {
   width: 100%;
   max-width: 500px;
+  max-height: 90vh; /* 💥 PŘIDÁNO: Karta nikdy nebude vyšší než 90% displeje */
+  overflow-y: auto; /* 💥 PŘIDÁNO: Zapne scrollování, když je text delší než displej */
   border: 1px solid var(--border-color);
   border-radius: 12px;
   animation: fadeIn 0.3s ease-out;
   
-  /* 💥 ZMĚNA: Barvy modálního okna */
+  /* Barvy modálního okna */
   background-color: var(--card-bg);
   color: var(--primary-dark);
 }
 
-/* 💥 ZMĚNA: Popisky formuláře */
+/* 💥 PŘIDÁNO: Elegantnější posuvník na PC/Macu (volitelné) */
+.save-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+.save-modal-card::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+
+/* --- Popisky formuláře zůstávají stejné --- */
 .save-modal-card .form-label {
     color: var(--primary-dark);
     font-weight: 600;
 }
 
-/* Třídy pro inputy uvnitř modálu (pokud nejsou globálně nastylované) */
+/* Třídy pro inputy uvnitř modálu */
 .save-modal-card .form-control,
 .save-modal-card .form-select {
     background-color: var(--bg-cream);
