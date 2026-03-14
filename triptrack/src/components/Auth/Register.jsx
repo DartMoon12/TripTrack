@@ -1,61 +1,64 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+// 💥 PŘIDÁNO: Importujeme funkci pro odeslání ověřovacího e-mailu z Firebase
+import { sendEmailVerification } from 'firebase/auth'
 
 export default function Register() {
-  // --- 1. STAVY (Paměť pro formulář) ---
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  
-  // Tohle je navíc oproti Loginu - potřebujeme ověřit, že se uživatel nepřepsal
   const [confirm, setConfirm] = useState('')
   
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // 💥 PŘIDÁNO: Stav pro zobrazení zprávy o úspěchu
+  const [successMsg, setSuccessMsg] = useState('')
 
-  // --- 2. NÁSTROJE ---
-  const navigate = useNavigate() // Pro přesměrování po úspěšné registraci
-  const { register } = useAuth() // Funkce pro vytvoření uživatele (z AuthContextu)
+  const navigate = useNavigate()
+  // 💥 PŘIDÁNO: Vytáhneme si i samotného currentUser z kontextu, 
+  // abychom věděli, na koho ten ověřovací e-mail poslat
+  const { register, currentUser } = useAuth() 
 
-  // --- 3. HLAVNÍ FUNKCE REGISTRACE ---
   async function handleRegister(e) {
-    // Zastavíme klasické odeslání formuláře (aby se stránka neobnovila)
     e.preventDefault()
 
-    // 4. VALIDACE (Kontrola před odesláním)
-    // Než budeme "otravovat" Firebase, zkontrolujeme základní věci u nás.
-    if (password !== confirm) {
-      return setError('Hesla se neshodují! Zkuste to znovu.')
-      // 'return' je tu důležitý - funkce se okamžitě ukončí a dál nepokračuje.
+    // 💥 PŘIDÁNO: Vlastní validace na délku hesla
+    if (password.length < 8) {
+        return setError('Heslo musí obsahovat alespoň 8 znaků.')
     }
 
-    // Pokud hesla sedí, vyčistíme chyby a zapneme načítání
+    if (password !== confirm) {
+      return setError('Hesla se neshodují! Zkuste to znovu.')
+    }
+
     setError('')
+    setSuccessMsg('')
     setLoading(true)
 
     try {
-      // 5. KOMUNIKACE S FIREBASE
-      // Čekáme, až Firebase vytvoří uživatele (await)
-      await register(email, password)
+      // Založíme uživatele
+      const userCredential = await register(email, password)
       
-      // 6. ÚSPĚCH
-      // Uživatel je vytvořený a rovnou přihlášený -> jdeme na hlavní stránku
-      navigate('/home', { replace: true })
+      // 💥 PŘIDÁNO: Odešleme uživateli na e-mail potvrzovací zprávu od Firebase
+      if (userCredential && userCredential.user) {
+         await sendEmailVerification(userCredential.user);
+      }
+      
+      // Ukážeme uživateli zelenou hlášku
+      setSuccessMsg('Účet vytvořen! Odeslali jsme vám potvrzovací e-mail.')
+      
+      // Počkáme 3 vteřiny, aby si to mohl přečíst, a pak ho hodíme na mapu
+      setTimeout(() => {
+          navigate('/home', { replace: true })
+      }, 3000)
 
     } catch (err) {
-      // 7. CHYBA
-      // Tady chytáme chyby jako "Email už existuje" nebo "Heslo je moc krátké"
       console.error("Chyba registrace:", err)
       setError('Nepodařilo se vytvořit účet. (Možná už tento email existuje?)')
-
-    } finally {
-      // 8. ÚKLID
-      // Vypneme načítání, ať to dopadne jakkoliv
-      setLoading(false)
-    }
+      setLoading(false) // Vypneme loading jen u chyby, při úspěchu to necháme točit, než ho to přesměruje
+    } 
   }
 
-  // --- 9. VYKRESLENÍ (UI) ---
   return (
     <div className="container" style={{ minHeight: '80vh' }}>
       <div className="row justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
@@ -65,10 +68,9 @@ export default function Register() {
             <div className="card-body p-4 p-md-5">
               <h1 className="h3 text-center mb-4">Vytvořit účet</h1>
               
-              {/* Zobrazíme chybu, jen když nějaká je */}
-              {error && (
-                <div className="alert alert-danger" role="alert">{error}</div>
-              )}
+              {error && <div className="alert alert-danger" role="alert">{error}</div>}
+              {/* 💥 PŘIDÁNO: Zelená hláška při úspěchu */}
+              {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
 
               <form onSubmit={handleRegister}>
                 <div className="mb-3">
@@ -89,12 +91,17 @@ export default function Register() {
                     className="form-control" 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
-                    // Tady by šlo přidat minLength={6}, protože Firebase vyžaduje min 6 znaků
+                    // 💥 PŘIDÁNO: Atribut minLength
+                    minLength={8}
                     required 
                   />
+                  {/* 💥 PŘIDÁNO: Informační text o podmínkách hesla pod políčkem */}
+                  <div className="form-text" style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                    Heslo musí obsahovat alespoň 8 znaků.
+                  </div>
                 </div>
 
-                <div className="mb-3">
+                <div className="mb-4">
                   <label className="form-label">Potvrzení hesla</label>
                   <input 
                     type="password" 
@@ -105,13 +112,13 @@ export default function Register() {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                  {loading ? 'Vytvářím účet...' : 'Vytvořit účet'}
+                <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
+                  {loading ? 'Zpracovávám...' : 'Vytvořit účet'}
                 </button>
               </form>
 
               <p className="text-center mt-4 mb-0">
-                Máte už účet? <Link to="/login">Přihlásit se</Link>
+                Máte už účet? <Link to="/login" className="text-decoration-none">Přihlásit se</Link>
               </p>
             </div>
           </div>

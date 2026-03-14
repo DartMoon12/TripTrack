@@ -97,8 +97,6 @@ function Navbar() {
                   {currentUser.email}
                 </button>
                 <ul className="dropdown-menu dropdown-menu-end">
-                  
-                  <li><hr className="dropdown-divider" /></li>
                   <li>
                     {/* Tlačítko pro odhlášení volá naši funkci nahoře */}
                     <button className="dropdown-item text-danger" onClick={handleLogout}>
