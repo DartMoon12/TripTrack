@@ -19,8 +19,8 @@ export default function Footer() {
         <div className="row g-4 justify-content-center text-center">
           
           {/* 1. Sloupec: O aplikaci */}
-          <div className="col-lg-4 col-md-6">
-            {/* Přidal jsem 'justify-content-center' i sem k logu, aby se ikonka a text srovnaly na střed */}
+          {/* 💥 ZMĚNA: col-md-4 místo col-md-6, aby se tam vešly 3 sloupce vedle sebe */}
+          <div className="col-lg-4 col-md-4">
             <div className="footer-brand mb-3 d-flex justify-content-center align-items-center">
               <FaMapMarkedAlt className="me-2 text-accent" size={24} />
               <span className="fw-bold fs-4">TripTrack</span>
@@ -33,9 +33,8 @@ export default function Footer() {
           </div>
 
           {/* 2. Sloupec: Rychlé odkazy */}
-          <div className="col-lg-4 col-md-6">
+          <div className="col-lg-4 col-md-4">
             <h5 className="fw-bold mb-3">Rychlé odkazy</h5>
-            {/* Seznam odkazů je teď taky na středu díky 'text-center' na rodiči */}
             <ul className="list-unstyled footer-links">
               <li><Link to="/">Domů</Link></li>
               <li><Link to="/mapa">Mapa a plánovač</Link></li>
@@ -43,9 +42,18 @@ export default function Footer() {
               <li><Link to="/oblibene">Oblíbené</Link></li>
             </ul>
           </div>
+
+          {/* 💥 PŘIDÁNO - 3. Sloupec: Právní informace */}
+          <div className="col-lg-4 col-md-4">
+            <h5 className="fw-bold mb-3">Právní informace</h5>
+            <ul className="list-unstyled footer-links">
+              <li><Link to="/podminky">Podmínky použití</Link></li>
+              <li><Link to="/ochrana-soukromi">Ochrana soukromí (GDPR)</Link></li>
+            </ul>
+          </div>
+
         </div>
 
-       
         <div className="footer-bottom mt-5 pt-3 border-top">
           <div className="row align-items-center">
             <div className="col-md-6 text-center text-md-start">

@@ -13,22 +13,22 @@ import RoutesPage from './components/RoutesPage/RoutesPage'
 import { RouteStorageProvider } from './Hooks/RouteStorageContext';
 import { Toaster } from 'react-hot-toast';
 import Favorite from './components/Favorite/Favorite';
-// 💥 1. Import Footeru
 import Footer from './components/Footer/Footer';
+
+// 💥 PŘIDÁNO: Import nových stránek (uprav si cestu, pokud sis složku pojmenoval jinak)
+import Terms from './components/Legal/Terms';
+import Privacy from './components/Legal/Privacy';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    // 💥 2. Změna hlavního divu: Přidány třídy pro Flexbox layout na celou výšku
     <div className="app-root d-flex flex-column min-vh-100">
       <RouteStorageProvider>
         <Toaster position="top-center" reverseOrder={false} />
         
         <Navbar />
 
-        {/* 💥 3. Wrapper obsahu: 'flex-grow-1' zajistí, že tento div zabere veškeré volné místo */}
-        {/* Tím se Footer automaticky posune až na úplný spodek stránky */}
         <div className="flex-grow-1">
           <Routes>
 
@@ -37,6 +37,10 @@ function App() {
             <Route path="/home" element={<Main />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            
+            {/* 💥 PŘIDÁNO: Právní stránky jsou veřejné, aby si je mohl přečíst kdokoli */}
+            <Route path="/podminky" element={<Terms />} />
+            <Route path="/ochrana-soukromi" element={<Privacy />} />
 
             {/* CHRÁNĚNÉ ROUTY */}
             <Route element={<PrivateRoute />}>
@@ -49,7 +53,6 @@ function App() {
           </Routes>
         </div>
 
-        {/* 💥 4. Vložení Footeru nakonec */}
         <Footer />
 
       </RouteStorageProvider>
