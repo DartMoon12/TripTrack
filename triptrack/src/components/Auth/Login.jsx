@@ -67,7 +67,17 @@ export default function Login() {
       await loginWithGoogle()
       navigate(from, { replace: true })
     } catch (err) {
-      setError('Přihlášení přes Google selhalo.')
+      // Dřív se chyba tiše zahodila, takže nebylo poznat, proč to selhalo.
+      console.error('Chyba při přihlášení přes Google:', err)
+      const messages = {
+        'auth/popup-closed-by-user': 'Přihlašovací okno bylo zavřeno.',
+        'auth/cancelled-popup-request': 'Přihlašovací okno bylo zavřeno.',
+        'auth/popup-blocked': 'Prohlížeč zablokoval přihlašovací okno. Povolte vyskakovací okna.',
+        'auth/unauthorized-domain': 'Tato doména není povolená ve Firebase (Authentication → Settings → Authorized domains).',
+        'auth/operation-not-allowed': 'Přihlášení přes Google není ve Firebase zapnuté.',
+        'auth/network-request-failed': 'Chyba sítě. Zkuste vypnout blokátor reklam a zkusit to znovu.',
+      }
+      setError(messages[err?.code] || `Přihlášení přes Google selhalo (${err?.code || 'neznámá chyba'}).`)
     } finally {
       setLoading(false)
     }

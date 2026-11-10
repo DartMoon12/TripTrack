@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   createUserWithEmailAndPassword, 
-  signInWithPopup 
+  signInWithPopup,
+  signInWithRedirect
 } from 'firebase/auth'
 // Načteme naši nastavenou 'auth' a 'googleProvider' z firebase.js
 import { auth, googleProvider } from '../../firebase'
@@ -59,7 +60,20 @@ export function AuthProvider({ children }) {
 
   // Funkce pro přihlášení přes Google (vyskakovací okno)
   async function loginWithGoogle() {
-    return await signInWithPopup(auth, googleProvider)
+    try {
+      return await signInWithPopup(auth, googleProvider)
+    } catch (err) {
+      // Když prohlížeč popup zablokuje (typicky mobil / Safari / přísné nastavení),
+      // zkusíme přihlášení přesměrováním. Výsledek pak zachytí onAuthStateChanged.
+      const fallbackCodes = [
+        'auth/popup-blocked',
+        'auth/operation-not-supported-in-this-environment',
+      ]
+      if (fallbackCodes.includes(err?.code)) {
+        return await signInWithRedirect(auth, googleProvider)
+      }
+      throw err
+    }
   }
 
   // Funkce pro registraci nového uživatele

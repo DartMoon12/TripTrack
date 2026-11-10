@@ -217,7 +217,7 @@ export default function TripMap() {
 
   const handleCancelSave = () => { setShowSaveModal(false); };
 
-  if (loadError) return <div>Chyba mapy.</div>;
+  if (loadError) return <div className="p-4 text-center">Mapu se nepodařilo načíst. Zkontrolujte klíč VITE_MAP_KEY.</div>;
   if (!isLoaded) return <div className="map-loading-spinner">Načítám mapu...</div>;
 
   return (
