@@ -1,324 +1,215 @@
 // src/components/RoutesPage/RoutesPage.jsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-// 💥 PŘIDAL JSEM "FaAlignLeft" do importů pro ikonku popisku
-import { FaTrash, FaClock, FaRulerHorizontal, FaStar, FaSearch, FaUserCircle, FaMapMarkerAlt, FaFilter, FaMap, FaAlignLeft } from 'react-icons/fa';
+import { Link, useSearchParams } from 'react-router-dom';
+import { FaSearch, FaPlus, FaRoute, FaUsers, FaFilter, FaSortAmountDown } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import { useRoutesStorage } from '../../Hooks/RouteStorageContext';
 import { useAuth } from '../Auth/AuthContext';
+import RouteCard, { RouteCardSkeleton } from '../UI/RouteCard';
+import ReviewModal from './ReviewModal';
+import { distanceToMeters, formatDistance } from '../../utils/routeUtils';
+import { copyRouteLink } from '../../utils/share';
 import './RoutesPage.css';
+
+const SORTS = {
+  newest: { label: 'Nejnovější', fn: (a, b) => (b.savedAt?.getTime() || 0) - (a.savedAt?.getTime() || 0) },
+  oldest: { label: 'Nejstarší', fn: (a, b) => (a.savedAt?.getTime() || 0) - (b.savedAt?.getTime() || 0) },
+  longest: { label: 'Nejdelší', fn: (a, b) => distanceToMeters(b) - distanceToMeters(a) },
+  shortest: { label: 'Nejkratší', fn: (a, b) => distanceToMeters(a) - distanceToMeters(b) },
+  rating: { label: 'Nejlépe hodnocené', fn: (a, b) => (b.avgRating || 0) - (a.avgRating || 0) || (b.reviewCount || 0) - (a.reviewCount || 0), publicOnly: true },
+  name: { label: 'Název A–Z', fn: (a, b) => a.name.localeCompare(b.name, 'cs') },
+};
 
 export default function RoutesPage() {
   const { currentUser } = useAuth();
-  
   const {
-      userRoutes,
-      publicRoutes,
-      favoritePublicRouteIds,
-      loadingUserRoutes, 
-      loadingPublicRoutes,
-      fetchPublicRoutes,
-      deleteRoute, 
-      toggleFavorite, 
-      addReview, 
-      getReviews
+    userRoutes, publicRoutes, favoritePublicRouteIds,
+    loadingUserRoutes, loadingPublicRoutes,
+    fetchPublicRoutes, deleteRoute, toggleFavorite,
   } = useRoutesStorage();
 
-  const [activeTab, setActiveTab] = useState('myRoutes');
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilterTag, setSelectedFilterTag] = useState("");
+  // Záložka je v URL (?tab=komunita), takže jde sdílet i přežije obnovení stránky
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') === 'komunita' ? 'community' : 'mine';
+  const setTab = (t) => setSearchParams(t === 'community' ? { tab: 'komunita' } : {}, { replace: true });
 
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState(null);
-  const [currentReviews, setCurrentReviews] = useState([]);
-  const [loadingReviews, setLoadingReviews] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
+  const [sortKey, setSortKey] = useState('newest');
+  const [reviewRoute, setReviewRoute] = useState(null);
 
   useEffect(() => {
-    if (activeTab === 'communityRoutes') fetchPublicRoutes();
-  }, [activeTab, fetchPublicRoutes]);
+    if (tab === 'community') fetchPublicRoutes();
+  }, [tab, fetchPublicRoutes]);
 
-  const openReviewModal = async (route) => {
-    setSelectedRoute(route);
-    setShowReviewModal(true);
-    setLoadingReviews(true);
-    
-    try {
-        const reviews = await getReviews(route.id);
-        setCurrentReviews(reviews || []);
-    } catch (e) { 
-        setCurrentReviews([]); 
-    } finally { 
-        setLoadingReviews(false);
+  // "Nejlépe hodnocené" dává smysl jen u komunity
+  useEffect(() => {
+    if (tab === 'mine' && SORTS[sortKey].publicOnly) setSortKey('newest');
+  }, [tab, sortKey]);
+
+  const source = tab === 'mine' ? userRoutes : publicRoutes;
+  const loading = tab === 'mine' ? loadingUserRoutes : loadingPublicRoutes;
+
+  const allTags = useMemo(
+    () => Array.from(new Set(source.flatMap((r) => r.tags || []))).sort((a, b) => a.localeCompare(b, 'cs')),
+    [source],
+  );
+
+  const visibleRoutes = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return source
+      .filter((r) => {
+        const matchesText = !term
+          || r.name.toLowerCase().includes(term)
+          || (r.description || '').toLowerCase().includes(term)
+          || (r.userName || '').toLowerCase().includes(term);
+        const matchesTag = !tagFilter || r.tags?.includes(tagFilter);
+        return matchesText && matchesTag;
+      })
+      .sort(SORTS[sortKey].fn);
+  }, [source, searchTerm, tagFilter, sortKey]);
+
+  const stats = useMemo(() => ({
+    count: userRoutes.length,
+    totalKm: formatDistance(userRoutes.reduce((sum, r) => sum + distanceToMeters(r), 0)),
+    published: userRoutes.filter((r) => r.publicId).length,
+    favorites: userRoutes.filter((r) => r.isFavorite).length + favoritePublicRouteIds.size,
+  }), [userRoutes, favoritePublicRouteIds]);
+
+  const handleDelete = (route, isPublic) => {
+    const msg = isPublic
+      ? `Opravdu chcete stáhnout trasu „${route.name}“ z komunity? Ve vašich trasách zůstane.`
+      : `Opravdu chcete smazat trasu „${route.name}“?${route.publicId ? ' Veřejná kopie v komunitě zůstane – smažete ji v záložce Komunita.' : ''}`;
+    if (window.confirm(msg)) deleteRoute(route.id, isPublic);
+  };
+
+  const handleShare = async (route) => {
+    // Soukromou trasu ostatní neuvidí – sdílíme její veřejnou kopii
+    const id = route.isPublic ? route.id : route.publicId;
+    if (!id) {
+      toast('Tuto trasu vidíte jen vy. Pro sdílení ji při uložení zveřejněte.', { icon: '🔒' });
+      return;
     }
+    await copyRouteLink(id);
   };
 
-  const filteredRoutes = useMemo(() => {
-    const current = activeTab === 'myRoutes' ? userRoutes : publicRoutes;
-    return current.filter(r => {
-      const mSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const mTag = selectedFilterTag === "" || r.tags?.includes(selectedFilterTag);
-      return mSearch && mTag;
-    });
-  }, [activeTab, userRoutes, publicRoutes, searchTerm, selectedFilterTag]);
-
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
-    
-    const newRev = await addReview(selectedRoute.id, rating, comment);
-    
-    if (newRev) {
-        setCurrentReviews(prev => [newRev, ...prev]);
-        setComment("");
-        setRating(5);
-    }
-  };
-
-  const renderRouteCard = (route, isMyRoute = true) => {
-    const isFav = !isMyRoute && favoritePublicRouteIds.has(route.id);
-
-    return (
-      <div className="col-12 col-md-6 col-lg-4 d-flex align-items-stretch" key={route.id}>
-        <div className="route-card-modern w-100 d-flex flex-column">
-          
-          {/* --- HORNÍ ČÁST (Obrázek) --- */}
-          <div className="card-img-wrapper">
-            {route.image ? (
-              <img src={route.image} className="w-100 h-100 object-fit-cover" alt={route.name} />
-            ) : (
-              <div className="placeholder-content h-100 w-100 d-flex flex-column align-items-center justify-content-center">
-                 <FaMap className="placeholder-icon" />
-                 <span className="placeholder-text">Bez náhledu</span>
-              </div>
-            )}
-            
-            {!isMyRoute && (
-              <div 
-                className="rating-badge" 
-                onClick={(e) => { e.stopPropagation(); openReviewModal(route); }}
-              >
-                <FaStar /> 
-                {route.avgRating ? Number(route.avgRating).toFixed(1) : '0.0'} 
-                <span>({route.reviewCount || 0})</span>
-              </div>
-            )}
-
-            <button 
-                className="btn rounded-circle d-flex align-items-center justify-content-center top-0 end-0 m-3"
-                style={{ width: '38px', height: '38px', position: 'absolute', background: 'rgba(255,255,255,0.8)', border: 'none', zIndex: 10 }}
-                onClick={(e) => { e.stopPropagation(); toggleFavorite(route.id, !isMyRoute); }}
-            >
-                <FaStar size={18} className={(isMyRoute ? route.isFavorite : isFav) ? 'text-warning' : 'text-secondary'} />
-            </button>
-          </div>
-
-          {/* --- SPODNÍ ČÁST (Obsah) --- */}
-          <div className="card-body p-4 d-flex flex-column flex-grow-1">
-            <h5 className="fw-bold mb-2 text-truncate" style={{ color: 'var(--primary-dark)' }}>{route.name}</h5>
-            
-            {/* 💥💥💥 TADY JE TEN POPISEK TRASY, KTERÝ V PŘEDCHOZÍM KÓDU CHYBĚL 💥💥💥 */}
-            {route.description ? (
-                <p className="small mb-3" style={{ 
-                    color: 'var(--primary-dark)', 
-                    opacity: 0.8,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2, 
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    minHeight: '40px' 
-                }}>
-                    <FaAlignLeft className="me-2 opacity-50" />
-                    {route.description}
-                </p>
-            ) : (
-                <p className="small mb-3 fst-italic" style={{ color: 'var(--primary-dark)', opacity: 0.4, minHeight: '40px' }}>
-                   Bez popisku
-                </p>
-            )}
-
-            <div className="d-flex flex-wrap gap-2 mb-3">
-                {route.tags && route.tags.length > 0 ? (
-                    route.tags.map(t => (
-                        <span key={t} className="tag-pill">
-                            {t}
-                        </span>
-                    ))
-                ) : (
-                    <span className="small opacity-50 fst-italic" style={{ color: 'var(--primary-dark)' }}>Bez štítků</span>
-                )}
-            </div>
-
-            <div className="d-flex justify-content-between gap-4 small mb-4 mt-auto pt-3 border-top" style={{ color: 'var(--primary-dark)', opacity: 0.7 }}>
-              <span className="d-flex align-items-center fw-medium"><FaRulerHorizontal className="text-warning me-2" /> {route.distance}</span>
-              <span className="d-flex align-items-center fw-medium"><FaClock className="text-warning me-2" /> {route.duration}</span>
-            </div>
-
-            <div className="d-flex gap-2 align-items-center w-100">
-              {!isMyRoute && (
-                <button className="btn-action-outline flex-grow-1" onClick={() => openReviewModal(route)}>
-                  Recenze
-                </button>
-              )}
-              
-              <Link to={`/mapa?routeId=${route.id}`} className="btn-action-primary flex-grow-1 text-center text-decoration-none">
-                Zobrazit
-              </Link>
-
-              {isMyRoute && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm("Opravdu chcete tuto trasu smazat?")) {
-                      deleteRoute(route.id, false);
-                    }
-                  }} 
-                  className="btn btn-outline-danger d-flex align-items-center justify-content-center" 
-                  title="Smazat trasu"
-                  style={{ width: '42px', height: '42px', borderRadius: '12px' }}
-                >
-                  <FaTrash size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const filtersActive = searchTerm || tagFilter;
 
   return (
-    <div className="routes-page-wrapper pt-5">
-      <div className="container">
-        
-        <div className="row align-items-end mb-5 gy-3">
-            <div className="col-lg-6">
-                <h1 className="page-title display-5 mb-3">Prohlížeč tras</h1>
-                <div className="nav-pills-custom">
-                    <button 
-                        className={`nav-link-custom ${activeTab === 'myRoutes' ? 'active' : ''}`} 
-                        onClick={() => setActiveTab('myRoutes')}
-                    >
-                        Moje trasy
-                    </button>
-                    <button 
-                        className={`nav-link-custom ${activeTab === 'communityRoutes' ? 'active' : ''}`} 
-                        onClick={() => setActiveTab('communityRoutes')}
-                    >
-                        Trasy ostatních
-                    </button>
-                </div>
-            </div>
+    <div className="container routes-page">
+      <header className="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+          <h1>Trasy</h1>
+          <p>Vaše uložené trasy a inspirace od ostatních cestovatelů.</p>
+        </div>
+        <Link to="/mapa" className="btn btn-accent"><FaPlus className="me-2" size={12} /> Nová trasa</Link>
+      </header>
 
-            <div className="col-lg-6">
-                <div className="d-flex gap-3">
-                    <div className="search-container d-flex align-items-center flex-grow-1">
-                        <FaSearch className="me-2" style={{ color: 'var(--primary-dark)', opacity: 0.5 }} />
-                        <input 
-                            type="text" 
-                            className="form-control search-input shadow-none" 
-                            placeholder="Hledat..." 
-                            value={searchTerm} 
-                            onChange={e => setSearchTerm(e.target.value)} 
-                        />
-                    </div>
-                    <div className="search-container d-flex align-items-center" style={{ minWidth: '180px' }}>
-                        <FaFilter className="me-2" style={{ color: 'var(--primary-dark)', opacity: 0.5 }} />
-                        <select 
-                            className="form-select filter-select shadow-none p-0" 
-                            value={selectedFilterTag} 
-                            onChange={e => setSelectedFilterTag(e.target.value)}
-                        >
-                            <option value="">Všechny štítky</option>
-                            {Array.from(new Set([...userRoutes, ...publicRoutes].flatMap(r => r.tags || []))).map(t => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </div>
+      {tab === 'mine' && !loadingUserRoutes && userRoutes.length > 0 && (
+        <div className="row g-3 mb-4">
+          <div className="col-6 col-md-3"><div className="stat-card"><div className="stat-value">{stats.count}</div><div className="stat-label">Uložených tras</div></div></div>
+          <div className="col-6 col-md-3"><div className="stat-card"><div className="stat-value">{stats.totalKm}</div><div className="stat-label">Celkem naplánováno</div></div></div>
+          <div className="col-6 col-md-3"><div className="stat-card"><div className="stat-value">{stats.published}</div><div className="stat-label">Zveřejněných</div></div></div>
+          <div className="col-6 col-md-3"><div className="stat-card"><div className="stat-value">{stats.favorites}</div><div className="stat-label">V oblíbených</div></div></div>
+        </div>
+      )}
+
+      <div className="routes-toolbar">
+        <div className="segmented" role="tablist" aria-label="Zobrazit trasy">
+          <button type="button" role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'active' : ''} onClick={() => setTab('mine')}>
+            <FaRoute className="me-2" size={13} />Moje trasy
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'community'} className={tab === 'community' ? 'active' : ''} onClick={() => setTab('community')}>
+            <FaUsers className="me-2" size={14} />Komunita
+          </button>
         </div>
 
-        <div className="row g-4">
-            {(activeTab === 'myRoutes' ? loadingUserRoutes : loadingPublicRoutes) ? (
-              <div className="col-12 text-center p-5"><div className="spinner-border text-warning"></div></div>
-            ) : filteredRoutes.length === 0 ? (
-              <div className="col-12 text-center py-5">
-                  <div className="display-1 mb-3 opacity-25">🗺️</div>
-                  <h4 className="fw-bold" style={{ color: 'var(--primary-dark)' }}>Zatím tu nic není</h4>
-                  <p style={{ color: 'var(--primary-dark)', opacity: 0.7 }}>Zkuste změnit filtry nebo vytvořit novou trasu.</p>
-              </div>
-            ) : (
-              filteredRoutes.map(r => renderRouteCard(r, activeTab === 'myRoutes'))
-            )}
+        <div className="routes-filters">
+          <label className="input-with-icon flex-grow-1">
+            <FaSearch />
+            <input
+              type="search"
+              className="form-control"
+              placeholder={tab === 'community' ? 'Hledat název, popis, autora…' : 'Hledat název nebo popis…'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Hledat trasy"
+            />
+          </label>
+          <label className="input-with-icon">
+            <FaFilter />
+            <select className="form-select" value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} aria-label="Filtrovat podle štítku">
+              <option value="">Všechny štítky</option>
+              {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label className="input-with-icon">
+            <FaSortAmountDown />
+            <select className="form-select" value={sortKey} onChange={(e) => setSortKey(e.target.value)} aria-label="Řadit">
+              {Object.entries(SORTS)
+                .filter(([, s]) => tab === 'community' || !s.publicOnly)
+                .map(([key, s]) => <option key={key} value={key}>{s.label}</option>)}
+            </select>
+          </label>
         </div>
-
-        {showReviewModal && (
-          <div className="modal d-block" style={{ background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(5px)', zIndex: 1050 }}>
-            <div className="modal-dialog modal-dialog-centered modal-md">
-              <div className="modal-content custom-modal-content shadow-lg">
-                <div className="modal-header border-0 p-4 pb-0">
-                  <h4 className="modal-title fw-bold">Recenze: {selectedRoute?.name}</h4>
-                  <button type="button" className="btn-close shadow-none" onClick={() => setShowReviewModal(false)}></button>
-                </div>
-                
-                <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                  <div className="mb-5">
-                    {loadingReviews ? (
-                       <div className="text-center py-3"><div className="spinner-border spinner-border-sm text-warning"></div></div>
-                    ) : currentReviews.length === 0 ? (
-                       <div className="p-4 bg-light rounded-4 text-center text-muted">Zatím bez recenzí. Buďte první!</div>
-                    ) : (
-                      <div className="d-flex flex-column gap-3">
-                        {currentReviews.map(rev => (
-                          <div key={rev.id} className="p-3 bg-light rounded-4 border-0">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                              <span className="fw-bold d-flex align-items-center gap-2 text-dark">
-                                <FaUserCircle className="text-muted" size={20} /> {rev.userName}
-                              </span>
-                              <div className="text-warning">
-                                {[...Array(5)].map((_, i) => <FaStar key={i} size={12} className={i < rev.rating ? '' : 'opacity-25'} />)}
-                              </div>
-                            </div>
-                            <p className="mb-0 text-dark opacity-75">{rev.comment}</p>
-                            <small className="text-muted d-block text-end mt-1" style={{ fontSize: '0.7rem' }}>
-                                {rev.createdAt instanceof Date ? rev.createdAt.toLocaleDateString('cs-CZ') : 'Právě teď'}
-                            </small>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-light p-4 rounded-4">
-                    <h6 className="fw-bold mb-3 text-dark">Přidat hodnocení</h6>
-                    <form onSubmit={handleReviewSubmit}>
-                        <div className="mb-3 d-flex justify-content-center gap-2">
-                        {[1,2,3,4,5].map(num => (
-                            <FaStar 
-                                key={num} size={32} 
-                                className={`cursor-pointer transition-all ${num <= rating ? 'text-warning' : 'text-secondary opacity-25'}`}
-                                onClick={() => setRating(num)} 
-                            />
-                        ))}
-                        </div>
-                        <textarea 
-                            className="form-control border-0 shadow-sm rounded-3 mb-3 p-3" 
-                            rows="3" 
-                            placeholder="Jak se vám trasa líbila?"
-                            value={comment} onChange={e => setComment(e.target.value)} 
-                            required
-                        ></textarea>
-                        <button type="submit" className="btn btn-action-primary w-100 py-2 shadow-sm">Odeslat recenzi</button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {loading ? (
+        <div className="row g-4">
+          {[0, 1, 2].map((i) => <div className="col-12 col-md-6 col-lg-4" key={i}><RouteCardSkeleton /></div>)}
+        </div>
+      ) : visibleRoutes.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">{tab === 'mine' ? <FaRoute /> : <FaUsers />}</div>
+          {filtersActive ? (
+            <>
+              <h4>Nic jsme nenašli</h4>
+              <p>Zkuste upravit hledání nebo zrušit filtr štítků.</p>
+              <button type="button" className="btn btn-ghost" onClick={() => { setSearchTerm(''); setTagFilter(''); }}>Zrušit filtry</button>
+            </>
+          ) : tab === 'mine' ? (
+            <>
+              <h4>Zatím nemáte žádnou trasu</h4>
+              <p>Otevřete mapu, naklikejte body a trasu si uložte.</p>
+              <Link to="/mapa" className="btn btn-accent">Naplánovat první trasu</Link>
+            </>
+          ) : (
+            <>
+              <h4>Komunita zatím nic nesdílí</h4>
+              <p>Buďte první – při ukládání trasy zaškrtněte „Zveřejnit“.</p>
+              <Link to="/mapa" className="btn btn-accent">Vytvořit trasu</Link>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="row g-4">
+          {visibleRoutes.map((route) => {
+            const isPublic = tab === 'community';
+            const isMine = isPublic ? route.userId === currentUser?.uid : true;
+            return (
+              <div className="col-12 col-md-6 col-lg-4" key={route.id}>
+                <RouteCard
+                  route={route}
+                  showAuthor={isPublic}
+                  isFavorite={isPublic ? favoritePublicRouteIds.has(route.id) : !!route.isFavorite}
+                  onToggleFavorite={() => toggleFavorite(route.id, isPublic)}
+                  onShare={() => handleShare(route)}
+                  onReviews={isPublic ? () => setReviewRoute(route) : undefined}
+                  onDelete={isMine ? () => handleDelete(route, isPublic) : undefined}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {reviewRoute && (
+        <ReviewModal
+          route={publicRoutes.find((r) => r.id === reviewRoute.id) || reviewRoute}
+          onClose={() => setReviewRoute(null)}
+        />
+      )}
     </div>
   );
 }

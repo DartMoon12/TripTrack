@@ -6,7 +6,8 @@ import {
   signOut, 
   createUserWithEmailAndPassword, 
   signInWithPopup,
-  signInWithRedirect
+  signInWithRedirect,
+  sendPasswordResetEmail
 } from 'firebase/auth'
 // Načteme naši nastavenou 'auth' a 'googleProvider' z firebase.js
 import { auth, googleProvider } from '../../firebase'
@@ -81,6 +82,11 @@ export function AuthProvider({ children }) {
     return await createUserWithEmailAndPassword(auth, email, password)
   }
 
+  // Funkce pro obnovu zapomenutého hesla (Firebase pošle e-mail s odkazem)
+  async function resetPassword(email) {
+    return await sendPasswordResetEmail(auth, email)
+  }
+
   // Funkce pro odhlášení
   async function logout() {
     return await signOut(auth)
@@ -99,7 +105,8 @@ export function AuthProvider({ children }) {
       login,
       logout,
       register,
-      loginWithGoogle
+      loginWithGoogle,
+      resetPassword
     }
   }, [currentUser, loading])
 

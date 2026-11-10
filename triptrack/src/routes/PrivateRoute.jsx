@@ -20,7 +20,7 @@ export default function PrivateRoute() {
   // a okamžitě by tě vykopla na Login, i když jsi ve skutečnosti přihlášený.
   if (loading) {
     // Zatímco čekáme, ukážeme jen text nebo točící kolečko.
-    return <div className="text-center p-5">Ověřuji uživatele...</div>; 
+    return <div className="page-loader"><span className="spinner" /></div>;
   }
 
   // --- 3. ROZHODOVÁNÍ (LOGIKA VYHAZOVAČE) ---

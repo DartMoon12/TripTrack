@@ -1,166 +1,121 @@
 import React, { useEffect, useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { getRedirectResult } from 'firebase/auth'
 import { auth } from '../../firebase'
-// Importujeme nástroje pro navigaci (přesměrování)
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-// Importujeme náš vlastní Hook, abychom se dostali k přihlašovacím funkcím
 import { useAuth } from './AuthContext'
-
-// Překlad kódů chyb z Firebase do češtiny
-function googleErrorMessage(err) {
-  const messages = {
-    'auth/popup-closed-by-user': 'Přihlašovací okno bylo zavřeno.',
-    'auth/cancelled-popup-request': 'Přihlašovací okno bylo zavřeno.',
-    'auth/popup-blocked': 'Prohlížeč zablokoval přihlašovací okno. Povolte vyskakovací okna.',
-    'auth/unauthorized-domain': 'Tato doména není povolená ve Firebase (Authentication → Settings → Authorized domains).',
-    'auth/operation-not-allowed': 'Přihlášení přes Google není ve Firebase zapnuté.',
-    'auth/network-request-failed': 'Chyba sítě. Zkuste vypnout blokátor reklam a zkusit to znovu.',
-  }
-  return messages[err?.code] || `Přihlášení přes Google selhalo (${err?.code || 'neznámá chyba'}).`
-}
+import AuthLayout, { Divider, GoogleButton } from './AuthLayout'
+import PasswordInput from './PasswordInput'
+import { authErrorMessage, isUserCancel } from './authErrors'
 
 export default function Login() {
-  // --- 1. STAVY (Paměť formuláře) ---
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  
-  // Stav pro chybovou hlášku (když se splete heslo)
   const [error, setError] = useState('')
-  
-  // Stav pro načítání (aby uživatel neklikal 10x na tlačítko, když to pracuje)
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // --- 2. NAVIGACE A DATA ---
-  const navigate = useNavigate() // Tohle je naše "GPS" pro změnu stránky
-  const location = useLocation() // Tohle nám řekne, odkud uživatel přišel
-  const { login, loginWithGoogle } = useAuth() // Vytáhneme si funkce z našeho Contextu
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { currentUser, login, loginWithGoogle, resetPassword } = useAuth()
 
-  // 3. CHYTRÉ PŘESMĚROVÁNÍ
-  // Tady zjišťujeme, kam uživatele poslat po přihlášení.
-  // Pokud se snažil jít na "Zamčenou stránku", Router si tu adresu uložil do "location.state.from".
-  // Takže ho tam vrátíme. Pokud ne, pošleme ho na '/home'.
-  const from = location.state?.from?.pathname || '/home'
+  // Po přihlášení vrátíme uživatele tam, kam původně chtěl (např. na sdílenou trasu)
+  const from = location.state?.from?.pathname
+    ? `${location.state.from.pathname}${location.state.from.search || ''}`
+    : '/mapa'
 
-  // Když se přihlášení přes Google dělalo přesměrováním (zablokovaný popup),
-  // vrátí nás Google zpátky sem. Tady si výsledek vyzvedneme.
+  // Návrat z přihlášení přes Google přesměrováním (když prohlížeč zablokuje popup)
   useEffect(() => {
     getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) navigate(from, { replace: true })
-      })
+      .then((result) => { if (result?.user) navigate(from, { replace: true }) })
       .catch((err) => {
         console.error('Chyba při přihlášení přes Google (redirect):', err)
-        setError(googleErrorMessage(err))
+        setError(authErrorMessage(err, 'Přihlášení přes Google selhalo'))
       })
   }, [from, navigate])
 
-  // --- 4. FUNKCE PRO PŘIHLÁŠENÍ EMAILEM ---
+  // Už přihlášený uživatel na přihlašovací stránce nemá co dělat
+  if (currentUser && !loading) return <Navigate to={from} replace />
+
   async function handleEmailLogin(e) {
-    // DŮLEŽITÉ: Zastavíme "klasické" odeslání formuláře, které by obnovilo celou stránku.
-    // My chceme vše řešit v Reactu bez bliknutí obrazovky.
     e.preventDefault()
-
-    // Vyčistíme staré chyby a zapneme točící kolečko (nebo zablokujeme tlačítka)
-    setError('')
-    setLoading(true)
-
+    setError(''); setInfo(''); setLoading(true)
     try {
-      // 1. Zkusíme se přihlásit přes Firebase (čekáme na výsledek - await)
-      await login(email, password)
-      
-      // 2. Když to projde (nespadne do catch), přesměrujeme uživatele.
-      // { replace: true } znamená, že Login zmizí z historie tlačítka "Zpět".
+      await login(email.trim(), password)
       navigate(from, { replace: true })
-      
     } catch (err) {
-      // 3. Když se to nepovede (špatné heslo, neexistující uživatel...)
-      console.error("Chyba při přihlášení:", err)
-      // Tip: Tady by šlo udělat hezčí překlad chyb (např. 'auth/wrong-password' -> 'Špatné heslo')
-      setError('Nepodařilo se přihlásit. Zkontrolujte údaje.')
-      
-    } finally {
-      // 4. Tohle se stane VŽDYCKY (úspěch i chyba).
-      // Vypneme načítání, aby tlačítka zase fungovala.
+      console.error('Chyba při přihlášení:', err)
+      setError(authErrorMessage(err, 'Přihlášení se nepovedlo'))
       setLoading(false)
-  }
+    }
   }
 
-  // --- 5. FUNKCE PRO PŘIHLÁŠENÍ GOOGLEM ---
   async function handleGoogleLogin() {
-    // Tady nepotřebujeme e.preventDefault(), protože to není "submit" formuláře, ale jen kliknutí.
-    setError('')
-    setLoading(true)
-
+    setError(''); setInfo(''); setLoading(true)
     try {
       await loginWithGoogle()
       navigate(from, { replace: true })
     } catch (err) {
-      // Dřív se chyba tiše zahodila, takže nebylo poznat, proč to selhalo.
       console.error('Chyba při přihlášení přes Google:', err)
-      setError(googleErrorMessage(err))
-    } finally {
+      if (!isUserCancel(err)) setError(authErrorMessage(err, 'Přihlášení přes Google selhalo'))
       setLoading(false)
-  }
+    }
   }
 
-  // --- 6. VYKRESLENÍ (UI) ---
+  async function handleResetPassword() {
+    setError(''); setInfo('')
+    if (!email.trim()) {
+      setError('Nejdřív vyplňte e-mail, na který máme poslat odkaz.')
+      return
+    }
+    try {
+      await resetPassword(email.trim())
+      setInfo('Pokud účet existuje, poslali jsme na e-mail odkaz pro nastavení nového hesla.')
+    } catch (err) {
+      setError(authErrorMessage(err, 'Odeslání e-mailu se nepovedlo'))
+    }
+  }
+
   return (
-    <div className="container" style={{ minHeight: '80vh' }}>
-      {/* Bootstrap třídy pro vycentrování karty na střed obrazovky */}
-      <div className="row justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
-          
-          <div className="card shadow-sm border-0 rounded-4">
-            <div className="card-body p-4 p-md-5">
-              <h1 className="h3 text-center mb-4">Přihlášení</h1>
-              
-              {/* Podmíněné vykreslení: Chybovou hlášku ukážeme, jen když nějaká je */}
-              {error && (
-                <div className="alert alert-danger" role="alert">{error}</div>
-              )}
+    <AuthLayout
+      title="Vítej zpátky"
+      subtitle="Přihlas se a pokračuj v plánování."
+      footer={<>Nemáš účet? <Link to="/register" state={location.state}>Vytvoř si ho</Link></>}
+    >
+      {error && <div className="auth-alert error" role="alert">{error}</div>}
+      {info && <div className="auth-alert success" role="status">{info}</div>}
 
-              <form onSubmit={handleEmailLogin}>
-                <div className="mb-3">
-                  <label className="form-label">E-mail</label>
-                  <input 
-                    type="email" 
-                    className="form-control" 
-                    // Propojíme input se stavem (Two-way binding)
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    required 
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Heslo</label>
-                  <input 
-                    type="password" 
-                    className="form-control" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    required 
-                  />
-                </div>
-                {/* Tlačítko zakážeme (disabled), pokud se zrovna načítá */}
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                  {loading ? 'Načítám...' : 'Přihlásit se'}
-                </button>
-              </form>
+      <GoogleButton onClick={handleGoogleLogin} disabled={loading} />
+      <Divider />
 
-              <div className="text-center text-muted my-3">nebo</div>
-              
-              <button onClick={handleGoogleLogin} className="btn btn-outline-secondary w-100" disabled={loading}>
-                Přihlásit se přes Google
-              </button>
-
-              <p className="text-center mt-4 mb-0">
-                Nemáte účet? <Link to="/register">Vytvořit účet</Link>
-              </p>
-            </div>
-          </div>
-
+      <form onSubmit={handleEmailLogin}>
+        <div className="mb-3">
+          <label className="form-label" htmlFor="login-email">E-mail</label>
+          <input
+            id="login-email"
+            type="email"
+            className="form-control"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
         </div>
-      </div>
-    </div>
+        <div className="mb-4">
+          <div className="d-flex justify-content-between align-items-center">
+            <label className="form-label" htmlFor="login-password">Heslo</label>
+            <button type="button" className="link-btn mb-1" onClick={handleResetPassword}>Zapomenuté heslo?</button>
+          </div>
+          <PasswordInput
+            id="login-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
+        <button type="submit" className="btn btn-accent w-100 py-2" disabled={loading}>
+          {loading ? 'Přihlašuji…' : 'Přihlásit se'}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }

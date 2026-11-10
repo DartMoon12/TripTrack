@@ -1,86 +1,57 @@
 /* src/components/Footer/Footer.css */
 
-.footer-section {
-    /* 💥 ZMĚNA: Používáme barvu karet. 
-       V Light mode bude bílá, v Dark mode tmavě šedá. */
-    background-color: var(--card-bg);
-    color: var(--primary-dark);
-    padding-top: 60px;
-    padding-bottom: 20px;
-    margin-top: auto;
-    
-    /* Přidáme horní čáru, aby se footer vizuálně oddělil od zbytku stránky */
-    border-top: 1px solid var(--border-color);
+.site-footer {
+  margin-top: 4rem;
+  padding: 3.5rem 0 1.75rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
 
-/* Nadpisy */
-.footer-section h5, 
-.footer-brand span {
-    /* Změna z bílé na hlavní textovou barvu (v Light mode tmavá, v Dark světlá) */
-    color: var(--primary-dark) !important; 
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text);
+  text-decoration: none;
+}
+.footer-brand:hover { color: var(--text); }
+
+.footer-text {
+  color: var(--muted);
+  margin: 1rem 0 0;
+  max-width: 26rem;
+  line-height: 1.6;
 }
 
-/* Odstavce */
-.footer-section p {
-    color: var(--primary-dark) !important;
-    opacity: 0.8; /* Místo šedé barvy použijeme průhlednost, vypadá to lépe */
+.footer-heading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
 }
 
-/* Odkazy v seznamu */
-.footer-links li {
-    margin-bottom: 10px;
-}
-
+.footer-links { list-style: none; padding: 0; margin: 0; }
+.footer-links li + li { margin-top: 0.6rem; }
 .footer-links a {
-    color: var(--primary-dark) !important;
-    opacity: 0.7; /* Lehce zprůhledníme, aby nebyly tak výrazné jako nadpisy */
-    text-decoration: none;
-    transition: all 0.3s ease;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
 }
+.footer-links a:hover { color: var(--accent); }
 
-.footer-links a:hover {
-    color: var(--accent-orange) !important; /* Oranžová zůstává */
-    opacity: 1;
-    padding-left: 5px;
-}
-
-/* Značka (TripTrack logo) */
-.text-accent {
-    color: var(--accent-orange) !important;
-}
-
-/* Sociální ikony */
-.social-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    
-    /* Pozadí ikon: Použijeme barvu pozadí stránky (--bg-cream) pro kontrast */
-    background-color: var(--bg-cream);
-    color: var(--primary-dark) !important;
-    
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    border: 1px solid var(--border-color);
-}
-
-.social-link:hover {
-    background-color: var(--accent-orange);
-    color: white !important; /* Na oranžové musí být text bílý */
-    transform: translateY(-3px);
-    border-color: var(--accent-orange);
-}
-
-/* Spodní lišta */
 .footer-bottom {
-    border-color: var(--border-color) !important; /* Použijeme naši dynamickou barvu čar */
-}
-
-.footer-bottom p {
-    color: var(--primary-dark) !important;
-    opacity: 0.6;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
 }

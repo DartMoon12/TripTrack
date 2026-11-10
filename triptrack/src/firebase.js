@@ -3,7 +3,6 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 
-import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -27,13 +26,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-let analytics
+
+// Analytika se načítá až po načtení stránky (dynamický import), aby nezdržovala start.
+// Na localhostu ji vynecháváme, ať se do statistik nepočítá vývoj.
 if (typeof window !== 'undefined' && location.hostname !== 'localhost') {
-  try {
-    analytics = getAnalytics(app)
-  } catch (e) {
-    // ignore analytics errors in non-https or dev
-  }
+  window.addEventListener('load', () => {
+    import('firebase/analytics')
+      .then(({ getAnalytics, isSupported }) => isSupported().then((ok) => ok && getAnalytics(app)))
+      .catch(() => { /* blokátor reklam apod. – analytika není potřeba */ })
+  }, { once: true })
 }
 
 export const db = getFirestore(app);

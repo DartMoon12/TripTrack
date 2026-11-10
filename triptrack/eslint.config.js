@@ -24,6 +24,11 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Kontexty exportují vedle Provideru i svůj hook (useAuth, useTheme…)
+      'react-refresh/only-export-components': ['error', {
+        allowConstantExport: true,
+        allowExportNames: ['useAuth', 'useTheme', 'useRoutesStorage'],
+      }],
     },
   },
 ])

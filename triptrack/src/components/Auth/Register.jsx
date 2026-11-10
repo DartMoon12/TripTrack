@@ -1,130 +1,116 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from './AuthContext'
-// 💥 PŘIDÁNO: Importujeme funkci pro odeslání ověřovacího e-mailu z Firebase
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { sendEmailVerification } from 'firebase/auth'
+import toast from 'react-hot-toast'
+import { useAuth } from './AuthContext'
+import AuthLayout, { Divider, GoogleButton } from './AuthLayout'
+import PasswordInput from './PasswordInput'
+import { authErrorMessage, isUserCancel } from './authErrors'
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  // 💥 PŘIDÁNO: Stav pro zobrazení zprávy o úspěchu
-  const [successMsg, setSuccessMsg] = useState('')
 
   const navigate = useNavigate()
-  // 💥 PŘIDÁNO: Vytáhneme si i samotného currentUser z kontextu, 
-  // abychom věděli, na koho ten ověřovací e-mail poslat
-  const { register, currentUser } = useAuth() 
+  const location = useLocation()
+  const { currentUser, register, loginWithGoogle } = useAuth()
+  const from = location.state?.from?.pathname || '/mapa'
+
+  if (currentUser && !loading) return <Navigate to={from} replace />
 
   async function handleRegister(e) {
     e.preventDefault()
-
-    // 💥 PŘIDÁNO: Vlastní validace na délku hesla
-    if (password.length < 8) {
-        return setError('Heslo musí obsahovat alespoň 8 znaků.')
-    }
-
-    if (password !== confirm) {
-      return setError('Hesla se neshodují! Zkuste to znovu.')
-    }
+    if (password.length < 8) return setError('Heslo musí mít alespoň 8 znaků.')
+    if (password !== confirm) return setError('Hesla se neshodují.')
 
     setError('')
-    setSuccessMsg('')
     setLoading(true)
-
     try {
-      // Založíme uživatele
-      const userCredential = await register(email, password)
-      
-      // 💥 PŘIDÁNO: Odešleme uživateli na e-mail potvrzovací zprávu od Firebase
-      if (userCredential && userCredential.user) {
-         await sendEmailVerification(userCredential.user);
-      }
-      
-      // Ukážeme uživateli zelenou hlášku
-      setSuccessMsg('Účet vytvořen! Odeslali jsme vám potvrzovací e-mail.')
-      
-      // Počkáme 3 vteřiny, aby si to mohl přečíst, a pak ho hodíme na mapu
-      setTimeout(() => {
-          navigate('/home', { replace: true })
-      }, 3000)
-
+      const { user } = await register(email.trim(), password)
+      // Ověřovací e-mail je bonus – když se nepovede odeslat, registrace i tak proběhla
+      try { await sendEmailVerification(user) } catch (err) { console.warn('Ověřovací e-mail se neodeslal:', err) }
+      toast.success('Účet vytvořen! Poslali jsme vám potvrzovací e-mail.')
+      navigate(from, { replace: true })
     } catch (err) {
-      console.error("Chyba registrace:", err)
-      setError('Nepodařilo se vytvořit účet. (Možná už tento email existuje?)')
-      setLoading(false) // Vypneme loading jen u chyby, při úspěchu to necháme točit, než ho to přesměruje
-    } 
+      console.error('Chyba registrace:', err)
+      setError(authErrorMessage(err, 'Účet se nepodařilo vytvořit'))
+      setLoading(false)
+    }
   }
 
+  async function handleGoogle() {
+    setError('')
+    setLoading(true)
+    try {
+      await loginWithGoogle()
+      navigate(from, { replace: true })
+    } catch (err) {
+      console.error('Chyba registrace přes Google:', err)
+      if (!isUserCancel(err)) setError(authErrorMessage(err, 'Registrace přes Google selhala'))
+      setLoading(false)
+    }
+  }
+
+  const passwordsMismatch = confirm.length > 0 && confirm !== password
+
   return (
-    <div className="container" style={{ minHeight: '80vh' }}>
-      <div className="row justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
-          
-          <div className="card shadow-sm border-0 rounded-4">
-            <div className="card-body p-4 p-md-5">
-              <h1 className="h3 text-center mb-4">Vytvořit účet</h1>
-              
-              {error && <div className="alert alert-danger" role="alert">{error}</div>}
-              {/* 💥 PŘIDÁNO: Zelená hláška při úspěchu */}
-              {successMsg && <div className="alert alert-success" role="alert">{successMsg}</div>}
+    <AuthLayout
+      title="Vytvoř si účet"
+      subtitle="Zdarma. Trasy se ti uloží do cloudu."
+      footer={<>Už máš účet? <Link to="/login" state={location.state}>Přihlas se</Link></>}
+    >
+      {error && <div className="auth-alert error" role="alert">{error}</div>}
 
-              <form onSubmit={handleRegister}>
-                <div className="mb-3">
-                  <label className="form-label">E-mail</label>
-                  <input 
-                    type="email" 
-                    className="form-control" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    required 
-                  />
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label">Heslo</label>
-                  <input 
-                    type="password" 
-                    className="form-control" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    // 💥 PŘIDÁNO: Atribut minLength
-                    minLength={8}
-                    required 
-                  />
-                  {/* 💥 PŘIDÁNO: Informační text o podmínkách hesla pod políčkem */}
-                  <div className="form-text" style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                    Heslo musí obsahovat alespoň 8 znaků.
-                  </div>
-                </div>
+      <GoogleButton onClick={handleGoogle} disabled={loading}>Registrovat přes Google</GoogleButton>
+      <Divider />
 
-                <div className="mb-4">
-                  <label className="form-label">Potvrzení hesla</label>
-                  <input 
-                    type="password" 
-                    className="form-control" 
-                    value={confirm} 
-                    onChange={(e) => setConfirm(e.target.value)} 
-                    required 
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
-                  {loading ? 'Zpracovávám...' : 'Vytvořit účet'}
-                </button>
-              </form>
-
-              <p className="text-center mt-4 mb-0">
-                Máte už účet? <Link to="/login" className="text-decoration-none">Přihlásit se</Link>
-              </p>
-            </div>
-          </div>
-
+      <form onSubmit={handleRegister}>
+        <div className="mb-3">
+          <label className="form-label" htmlFor="reg-email">E-mail</label>
+          <input
+            id="reg-email"
+            type="email"
+            className="form-control"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
         </div>
-      </div>
-    </div>
+
+        <div className="mb-3">
+          <label className="form-label" htmlFor="reg-password">Heslo</label>
+          <PasswordInput
+            id="reg-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            minLength={8}
+          />
+          <div className="form-text">Alespoň 8 znaků.</div>
+        </div>
+
+        <div className="mb-4">
+          <label className="form-label" htmlFor="reg-confirm">Heslo znovu</label>
+          <PasswordInput
+            id="reg-confirm"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+          />
+          {passwordsMismatch && <div className="form-text text-danger">Hesla se zatím neshodují.</div>}
+        </div>
+
+        <button type="submit" className="btn btn-accent w-100 py-2" disabled={loading}>
+          {loading ? 'Vytvářím účet…' : 'Vytvořit účet'}
+        </button>
+        <p className="small text-muted text-center mt-3 mb-0">
+          Registrací souhlasíte s <Link to="/podminky">podmínkami použití</Link>.
+        </p>
+      </form>
+    </AuthLayout>
   )
 }

@@ -2,46 +2,40 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// 1. Vytvoříme "krabici" pro téma
 const ThemeContext = createContext();
 
-// 2. Vlastní Hook, abychom mohli téma používat všude (např. v Navbaru)
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
-// 3. Poskytovatel (Provider) - ten obalí celou aplikaci
-export function ThemeProvider({ children }) {
-  
-  // --- STAV ---
-  // Tady zjistíme, jestli už uživatel někdy na webu byl a co si nastavil.
-  // Pokud nic v 'localStorage' není, dáme základní 'light' (světlý).
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('app-theme');
-    return savedTheme || 'light';
-  });
+// Výchozí téma: uložená volba uživatele, jinak nastavení systému.
+function getInitialTheme() {
+  try {
+    const saved = localStorage.getItem('app-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
 
-  // --- EFEKT: ZMĚNA VZHLEDU ---
-  // Tohle se spustí vždy, když se změní proměnná 'theme'.
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(getInitialTheme);
+
   useEffect(() => {
-    // A) Nastavíme atribut přímo na hlavní element HTML.
-    // Bootstrap se podle toho zařídí a přebarví své komponenty.
+    // Bootstrap i naše CSS proměnné se řídí atributem data-bs-theme
     document.documentElement.setAttribute('data-bs-theme', theme);
-    
-    // B) Uložíme volbu do prohlížeče, aby to vydrželo i po obnovení stránky (F5).
-    localStorage.setItem('app-theme', theme);
+    try {
+      localStorage.setItem('app-theme', theme);
+    } catch {
+      // Soukromé okno / zablokované úložiště – téma jen nepřežije obnovení stránky
+    }
   }, [theme]);
 
-  // --- FUNKCE PRO PŘEPÍNÁNÍ ---
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
-
-  // --- ODESLÁNÍ DÁL ---
-  const value = { theme, toggleTheme };
+  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
