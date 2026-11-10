@@ -238,7 +238,8 @@ export default function TripMap() {
         <div className={`${isPanelOpen ? 'd-flex' : 'd-none'} d-md-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 w-100`}>
             
             <div style={{ flex: '2' }}>
-                <Autocomplete onLoad={(ac) => (autocompleteRef.current = ac)} onPlaceChanged={handlePlaceChanged}>
+                {/* fields = jen data, která opravdu používáme (levnější SKU s větším free limitem) */}
+                <Autocomplete onLoad={(ac) => (autocompleteRef.current = ac)} onPlaceChanged={handlePlaceChanged} fields={["geometry", "formatted_address"]}>
                     <input type="text" placeholder="🔍 Hledat..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="form-control map-search-input w-100" />
                 </Autocomplete>
             </div>
