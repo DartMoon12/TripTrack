@@ -11,7 +11,13 @@ import { getAnalytics } from "firebase/analytics";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCZVvzAHGiI9YdR5dYtLkVqd39cmoe3gsA",
-  authDomain: "triptrack-700a4.firebaseapp.com",
+  // Na produkci běží přihlašovací stránka Firebase přes naši doménu (proxy ve vercel.json).
+  // Prohlížeče blokují úložiště cizích domén, takže s firebaseapp.com se po návratu
+  // z Google přihlášení výsledek ztratil a uživatel nebyl přihlášený.
+  authDomain:
+    typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? window.location.host
+      : "triptrack-700a4.firebaseapp.com",
   projectId: "triptrack-700a4",
   storageBucket: "triptrack-700a4.appspot.com",
   messagingSenderId: "327702172517",

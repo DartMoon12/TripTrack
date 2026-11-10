@@ -1,8 +1,23 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { getRedirectResult } from 'firebase/auth'
+import { auth } from '../../firebase'
 // Importujeme nástroje pro navigaci (přesměrování)
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 // Importujeme náš vlastní Hook, abychom se dostali k přihlašovacím funkcím
 import { useAuth } from './AuthContext'
+
+// Překlad kódů chyb z Firebase do češtiny
+function googleErrorMessage(err) {
+  const messages = {
+    'auth/popup-closed-by-user': 'Přihlašovací okno bylo zavřeno.',
+    'auth/cancelled-popup-request': 'Přihlašovací okno bylo zavřeno.',
+    'auth/popup-blocked': 'Prohlížeč zablokoval přihlašovací okno. Povolte vyskakovací okna.',
+    'auth/unauthorized-domain': 'Tato doména není povolená ve Firebase (Authentication → Settings → Authorized domains).',
+    'auth/operation-not-allowed': 'Přihlášení přes Google není ve Firebase zapnuté.',
+    'auth/network-request-failed': 'Chyba sítě. Zkuste vypnout blokátor reklam a zkusit to znovu.',
+  }
+  return messages[err?.code] || `Přihlášení přes Google selhalo (${err?.code || 'neznámá chyba'}).`
+}
 
 export default function Login() {
   // --- 1. STAVY (Paměť formuláře) ---
@@ -25,6 +40,19 @@ export default function Login() {
   // Pokud se snažil jít na "Zamčenou stránku", Router si tu adresu uložil do "location.state.from".
   // Takže ho tam vrátíme. Pokud ne, pošleme ho na '/home'.
   const from = location.state?.from?.pathname || '/home'
+
+  // Když se přihlášení přes Google dělalo přesměrováním (zablokovaný popup),
+  // vrátí nás Google zpátky sem. Tady si výsledek vyzvedneme.
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) navigate(from, { replace: true })
+      })
+      .catch((err) => {
+        console.error('Chyba při přihlášení přes Google (redirect):', err)
+        setError(googleErrorMessage(err))
+      })
+  }, [from, navigate])
 
   // --- 4. FUNKCE PRO PŘIHLÁŠENÍ EMAILEM ---
   async function handleEmailLogin(e) {
@@ -54,7 +82,7 @@ export default function Login() {
       // 4. Tohle se stane VŽDYCKY (úspěch i chyba).
       // Vypneme načítání, aby tlačítka zase fungovala.
       setLoading(false)
-    }
+  }
   }
 
   // --- 5. FUNKCE PRO PŘIHLÁŠENÍ GOOGLEM ---
@@ -69,18 +97,10 @@ export default function Login() {
     } catch (err) {
       // Dřív se chyba tiše zahodila, takže nebylo poznat, proč to selhalo.
       console.error('Chyba při přihlášení přes Google:', err)
-      const messages = {
-        'auth/popup-closed-by-user': 'Přihlašovací okno bylo zavřeno.',
-        'auth/cancelled-popup-request': 'Přihlašovací okno bylo zavřeno.',
-        'auth/popup-blocked': 'Prohlížeč zablokoval přihlašovací okno. Povolte vyskakovací okna.',
-        'auth/unauthorized-domain': 'Tato doména není povolená ve Firebase (Authentication → Settings → Authorized domains).',
-        'auth/operation-not-allowed': 'Přihlášení přes Google není ve Firebase zapnuté.',
-        'auth/network-request-failed': 'Chyba sítě. Zkuste vypnout blokátor reklam a zkusit to znovu.',
-      }
-      setError(messages[err?.code] || `Přihlášení přes Google selhalo (${err?.code || 'neznámá chyba'}).`)
+      setError(googleErrorMessage(err))
     } finally {
       setLoading(false)
-    }
+  }
   }
 
   // --- 6. VYKRESLENÍ (UI) ---
